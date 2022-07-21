@@ -14,12 +14,22 @@ function readInputFiles() {
 
 function generateBookData(markdownFiles) {
   const processMarkdown = require('./processMarkdown');
-  const bookData = [];
+  const bookData = {};
 
   for (const fileName of markdownFiles) {
     const markdown = fs.readFileSync(SOURCE_PATH + fileName, 'utf8');
     const data = processMarkdown(markdown, fileName);
-    if (data) bookData.push(data);
+    if (data) {
+      const isStoryGroup = ![undefined, ''].includes(data.params.story);
+      const title = isStoryGroup ? data.params.story.replaceAll(/[\[\]]/g, '') : data.title;
+      if (bookData[title] === undefined) bookData[title] = {
+        title,
+        isStoryGroup,
+        language: data.params.language,
+        sections: [],
+      };
+      bookData[title].sections.push(data);
+    }
   }
 
   return bookData;
@@ -32,8 +42,11 @@ function saveOutputFiles(bookData) {
     fs.mkdirSync('./output');
   }
 
-  for (const book of bookData) {
-    makeEpub(book);
+  for (const title in bookData) {
+    bookData[title].sections.sort((a, b) =>
+      (a.params.order ?? a.title).localeCompare(b.params.order ?? b.title));
+
+    makeEpub(bookData[title]);
   }
 }
 

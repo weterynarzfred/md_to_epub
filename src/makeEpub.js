@@ -18,14 +18,15 @@ function makeEpub(data) {
 
   const zipOebps = zip.folder('OEBPS');
   zipOebps.file('content.opf', getContentOpf(data));
-  zipOebps.folder('Text')
-    .file('text.xhtml', getHtmlStructure(data));
   zipOebps.folder('Styles')
     .file('style.css', fs.readFileSync('./epub_parts/style.css'));
+  zipOebps.folder('Text')
+    .file('text.xhtml', getHtmlStructure(data));
 
+  const fileName = (data.isStoryGroup ? '_' : '') + data.title.replace(/[^a-zA-Z0-9 -_ęóąśłżźćńĘÓĄŚŁŻŹĆŃ]/);
   zip
     .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
-    .pipe(fs.createWriteStream('./output/' + data.title.replace(/[^a-zA-Z0-9 -_ęóąśłżźćńĘÓĄŚŁŻŹĆŃ]/) + '.epub'))
+    .pipe(fs.createWriteStream('./output/' + fileName + '.epub'))
     .on('finish', () => {
       console.log(data.title + ' done');
     });

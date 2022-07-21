@@ -3,7 +3,7 @@ function getContentOpf(data) {
   <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:title>${data.title}</dc:title>
     <dc:creator opf:role="aut" opf:file-as="${data.author}">${data.author}</dc:creator>
-    <dc:language>${data.params.language}</dc:language>
+    <dc:language>${data.language}</dc:language>
     <dc:publisher>${data.publisher}</dc:publisher>
     </metadata>
   <manifest>
@@ -17,15 +17,21 @@ function getContentOpf(data) {
 }
 
 function getHtmlStructure(data) {
+  let content = '';
+  for (const section of data.sections) {
+    content += section.html;
+  }
+
   return `<?xml version="1.0" encoding="utf-8"?>
-  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${data.params.language}" lang="${data.params.language}">
+  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${data.language}" lang="${data.language}">
     <head>
       <title />
       <link href="../Styles/style.css" rel="stylesheet" type="text/css" />
     </head>
   
     <body>
-${data.html}
+    ${data.isStoryGroup ? `<h1>${data.title}</h1>` : ''}
+${content}
   </body>
 </html>
 `;
