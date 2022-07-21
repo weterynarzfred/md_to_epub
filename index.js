@@ -1,3 +1,3 @@
-const render = require('./src/render.js');
+const { render } = require('./src/render.js');
 
 render();
