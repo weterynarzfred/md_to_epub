@@ -12,24 +12,35 @@ function readInputFiles() {
     .filter(file => isMarkdownFileRegex.test(file));
 }
 
-function saveOutputFiles(files) {
+function generateBookData(markdownFiles) {
   const processMarkdown = require('./processMarkdown');
+  const bookData = [];
+
+  for (const fileName of markdownFiles) {
+    const markdown = fs.readFileSync(SOURCE_PATH + fileName, 'utf8');
+    const data = processMarkdown(markdown, fileName);
+    if (data) bookData.push(data);
+  }
+
+  return bookData;
+}
+
+function saveOutputFiles(bookData) {
   const makeEpub = require('./makeEpub');
 
   if (!fs.existsSync('./output')) {
     fs.mkdirSync('./output');
   }
 
-  for (const file of files) {
-    const markdown = fs.readFileSync(SOURCE_PATH + file, 'utf8');
-    data = processMarkdown(markdown, file);
-    if (data) makeEpub(file.replace(/\.md$/, ''), data);
+  for (const book of bookData) {
+    makeEpub(book);
   }
 }
 
 function render() {
-  const files = readInputFiles();
-  saveOutputFiles(files);
+  const markdownFiles = readInputFiles();
+  const bookData = generateBookData(markdownFiles);
+  saveOutputFiles(bookData);
 }
 
 module.exports = { render, INFO };

@@ -3,16 +3,12 @@
 const fs = require('fs');
 const JSZip = require('jszip');
 
-function makeEpub(title, data) {
+function makeEpub(data) {
   const { getHtmlStructure, getContentOpf } = require('./contentWrappers');
   const { INFO } = require('./render');
 
-  const options = {
-    title: title,
-    author: data.author ?? INFO.author,
-    publisher: data.publisher ?? INFO.publisher,
-    language: data.params.language,
-  };
+  data.author = data.author ?? INFO.author;
+  data.publisher = data.publisher ?? INFO.publisher;
 
   zip = new JSZip();
   zip.file('mimetype', fs.readFileSync('./epub_parts/mimetype'));
@@ -21,17 +17,17 @@ function makeEpub(title, data) {
   zipMeta.file('container.xml', fs.readFileSync('./epub_parts/container.xml'));
 
   const zipOebps = zip.folder('OEBPS');
-  zipOebps.file('content.opf', getContentOpf(options));
+  zipOebps.file('content.opf', getContentOpf(data));
   zipOebps.folder('Text')
-    .file('text.xhtml', getHtmlStructure(data.html, options));
+    .file('text.xhtml', getHtmlStructure(data));
   zipOebps.folder('Styles')
     .file('style.css', fs.readFileSync('./epub_parts/style.css'));
 
   zip
     .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
-    .pipe(fs.createWriteStream('./output/' + title.replace(/[^a-zA-Z0-9 -_ęóąśłżźćńĘÓĄŚŁŻŹĆŃ]/) + '.epub'))
+    .pipe(fs.createWriteStream('./output/' + data.title.replace(/[^a-zA-Z0-9 -_ęóąśłżźćńĘÓĄŚŁŻŹĆŃ]/) + '.epub'))
     .on('finish', () => {
-      console.log(title + ' done');
+      console.log(data.title + ' done');
     });
 }
 
