@@ -1,0 +1,15 @@
+{
+  "name": "md_to_epub",
+  "version": "1.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "hyphen": "^1.6.4",
+    "jszip": "^3.10.0",
+    "markdown-it": "^13.0.1"
+  }
+}
