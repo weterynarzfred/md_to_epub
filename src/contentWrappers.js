@@ -23,7 +23,7 @@ function getContentOpf(data) {
 function getHtmlStructure(data) {
   let content = '';
   for (const section of data.sections) {
-    content += section.html;
+    content += `<div class="section">${section.html}</div>`;
   }
 
   return `<?xml version="1.0" encoding="utf-8"?>
