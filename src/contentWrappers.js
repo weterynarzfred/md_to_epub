@@ -1,8 +1,12 @@
 function getContentOpf(data) {
+  let authorSort = data.author.split(' ');
+  authorSort.unshift(authorSort.pop());
+  authorSort = authorSort.join(' ').replace(' ', ', ');
+
   return `<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="uuid">
   <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:title>${data.title}</dc:title>
-    <dc:creator opf:role="aut" opf:file-as="${data.author}">${data.author}</dc:creator>
+    <dc:creator opf:role="aut" opf:file-as="${authorSort}">${data.author}</dc:creator>
     <dc:language>${data.language}</dc:language>
     <dc:publisher>${data.publisher}</dc:publisher>
     </metadata>
