@@ -17,3 +17,8 @@ h2 {
 .section {
   page-break-after: always;
 }
+
+hr {
+  border: none;
+  border-top: 1px solid;
+}
