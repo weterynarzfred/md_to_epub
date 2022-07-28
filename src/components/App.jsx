@@ -11,7 +11,6 @@ function getMarkdown(textContext) {
 
 function App({ textContext }) {
   const bookData = generateBookData(getMarkdown(textContext));
-  console.log(bookData);
 
   return <div id="App">
     {Object.values(bookData).map((data) => <Prose key={data.title} data={data} />)}

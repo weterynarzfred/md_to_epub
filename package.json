@@ -37,7 +37,7 @@
     "markdown-it": "^13.0.1",
     "raw-loader": "^4.0.2",
     "react-app-rewired": "^2.2.1",
-    "sass": "^1.53.0",
+    "sass": "^1.54.0",
     "webpack-image-resize-loader": "^5.0.0"
   }
 }
