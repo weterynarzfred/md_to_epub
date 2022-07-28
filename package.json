@@ -1,15 +1,43 @@
 {
-  "name": "md_to_epub",
-  "version": "1.0",
+  "name": "display_md",
+  "version": "1.0.0",
+  "description": "",
   "main": "index.js",
+  "homepage": ".",
   "scripts": {
-    "start": "node index.js"
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "make epub": "node ./src/make_epub.js"
   },
+  "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "ISC",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
   "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-markdown": "^8.0.3",
+    "react-router-dom": "^6.3.0",
+    "react-scripts": "^5.0.1"
+  },
+  "devDependencies": {
     "hyphen": "^1.6.4",
     "jszip": "^3.10.0",
-    "markdown-it": "^13.0.1"
+    "markdown-it": "^13.0.1",
+    "raw-loader": "^4.0.2",
+    "react-app-rewired": "^2.2.1",
+    "sass": "^1.53.0",
+    "webpack-image-resize-loader": "^5.0.0"
   }
 }

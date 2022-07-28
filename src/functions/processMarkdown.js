@@ -24,7 +24,7 @@ function separateParams(inputMarkdown) {
   };
 }
 
-function getPreprocessedMarkdown(data) {
+function preprocessMarkdown(data) {
   data.markdown = data.markdown
     .replaceAll(/^(#+) /gm, '$1# ') // increase heading depth
     .replaceAll(/^— /gm, '—&#x2004;') // change spaces after em-dashes to constant width
@@ -44,7 +44,7 @@ function getPreprocessedMarkdown(data) {
 function processMarkdown(inputMarkdown, fileName) {
   const data = separateParams(inputMarkdown);
   if (data.params.tag !== 'prose') return false;
-  data.html = md.render(getPreprocessedMarkdown(data));
+  data.html = md.render(preprocessMarkdown(data));
   data.title = fileName.replace(/\.md$/, '');
 
   return data;

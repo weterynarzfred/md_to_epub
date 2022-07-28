@@ -2,6 +2,7 @@ p {
   text-align: justify;
   hyphens: auto;
   margin: 0.5em 0;
+  text-indent: 1.5em;
 }
 
 h1 {

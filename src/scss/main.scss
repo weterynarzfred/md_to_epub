@@ -1,0 +1,49 @@
+@font-face {
+  font-family: "Computer Modern Roman";
+  src: url("../media/cmu serif roman.ttf");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Computer Modern Roman";
+  src: url("../media/cmu serif italic.ttf");
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Computer Modern Roman";
+  src: url("../media/cmu serif bold.ttf");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Computer Modern Roman";
+  src: url("../media/cmu serif bold italic.ttf");
+  font-weight: 700;
+  font-style: italic;
+}
+
+body {
+  background-color: #eee;
+  background-image: url("../media/dust_scratches.webp");
+  color: #333;
+}
+
+#App {
+  max-width: 30em;
+  padding: 0 1em;
+  margin: 6em auto;
+  font-family: "Computer Modern Roman", serif;
+  font-size: 1.4em;
+}
+
+h2 {
+  font-weight: 400;
+}
+
+code {
+  white-space: pre-wrap;
+}
