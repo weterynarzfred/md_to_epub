@@ -13,7 +13,10 @@ function App({ textContext }) {
   const bookData = generateBookData(getMarkdown(textContext));
 
   return <div id="App">
-    {Object.values(bookData).map((data) => <Prose key={data.title} data={data} />)}
+    {Object
+      .values(bookData)
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .map((data) => <Prose key={data.title} data={data} />)}
   </div>;
 }
 

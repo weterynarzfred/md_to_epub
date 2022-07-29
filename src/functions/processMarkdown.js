@@ -26,10 +26,14 @@ function separateParams(inputMarkdown) {
 
 function preprocessMarkdown(data) {
   data.markdown = data.markdown
-    .replaceAll(/^(#+) /gm, '$1# ') // increase heading depth
     .replaceAll(/^— /gm, '—&#x2004;') // change spaces after em-dashes to constant width
     .replaceAll(/ ([a-zA-Z—–-]) /g, " $1&nbsp;") // orphans
     .replaceAll(/$\n/gm, '\n\n'); // add empty space between paragraphs
+
+  if (![undefined, ''].includes(data.params.story)) {
+    data.markdown = data.markdown
+      .replaceAll(/^(#+) /gm, '$1# '); // increase heading depth
+  }
 
   if (![undefined, ''].includes(data.params.language)) {
     try {
