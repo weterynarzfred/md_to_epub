@@ -2,13 +2,14 @@
 
 const fs = require('fs');
 const JSZip = require('jszip');
-const { INFO } = require('../constants');
+const { SETTINGS } = require('../constants');
 
 function makeEpub(data) {
   const { getHtmlStructure, getContentOpf } = require('./contentWrappers');
 
-  data.author = data.author ?? INFO.author;
-  data.publisher = data.publisher ?? INFO.publisher;
+  data.author = data.author ?? SETTINGS.author;
+  data.publisher = data.publisher ?? SETTINGS.publisher;
+  data.language = data.language ?? SETTINGS.language;
 
   zip = new JSZip();
   zip.file('mimetype', fs.readFileSync('./src/epub_parts/mimetype'));
@@ -23,7 +24,7 @@ function makeEpub(data) {
   zipOebps.folder('Text')
     .file('text.xhtml', getHtmlStructure(data));
 
-  const fileName = (data.isStoryGroup ? '_' : '') + data.title.replace(/[^a-zA-Z0-9 -_ęóąśłżźćńĘÓĄŚŁŻŹĆŃ]/);
+  const fileName = (data.isStoryGroup ? '_' : '') + data.title.replace(/[^a-zA-Z0-9 -_ęóąśłżźćńĘÓĄŚŁŻŹĆŃ]/, '');
   zip
     .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
     .pipe(fs.createWriteStream('./output/' + fileName + '.epub'))

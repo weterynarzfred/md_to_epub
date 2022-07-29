@@ -1,3 +1,5 @@
+const { SETTINGS } = require('../constants');
+
 const MarkdownIt = require('markdown-it'),
   md = new MarkdownIt();
 
@@ -27,17 +29,22 @@ function separateParams(inputMarkdown) {
 function preprocessMarkdown(data) {
   data.markdown = data.markdown
     .replaceAll(/^— /gm, '—&#x2004;') // change spaces after em-dashes to constant width
-    .replaceAll(/ ([a-zA-Z—–-]) /g, " $1&nbsp;") // orphans
-    .replaceAll(/$\n/gm, '\n\n'); // add empty space between paragraphs
+    .replaceAll(/ ([a-zA-Z—–\-]) /g, " $1&nbsp;"); // deal with orphans
 
-  if (![undefined, ''].includes(data.params.story)) {
+  if (SETTINGS.addEmptyLines) {
+    data.markdown = data.markdown
+      .replaceAll(/$\n/gm, '\n\n');
+  }
+
+  if (![undefined, ''].includes(data.params?.story)) {
     data.markdown = data.markdown
       .replaceAll(/^(#+) /gm, '$1# '); // increase heading depth
   }
 
-  if (![undefined, ''].includes(data.params.language)) {
+  if (SETTINGS.hyphenate) {
+    const lang = data.params?.language ?? SETTINGS.language;
     try {
-      const hyphen = require(`hyphen/${data.params.language}`);
+      const hyphen = require(`hyphen/${lang}`);
       data.markdown = hyphen.hyphenateHTMLSync(data.markdown);
     } catch (e) { console.error(e); }
   }
@@ -46,8 +53,10 @@ function preprocessMarkdown(data) {
 }
 
 function processMarkdown(inputMarkdown, fileName) {
-  const data = separateParams(inputMarkdown);
-  if (data.params.tag !== 'prose') return false;
+  const data = SETTINGS.parseGtAsProps ?
+    separateParams(inputMarkdown) :
+    { markdown: inputMarkdown, props: {} };
+  if (SETTINGS.parseGtAsProps && data.params.tag !== 'prose') return false;
   data.html = md.render(preprocessMarkdown(data));
   data.title = fileName.replace(/\.md$/, '');
 
