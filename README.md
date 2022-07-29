@@ -1,10 +1,11 @@
 # md to epub
 
-This is a simple script that converts markdown into epub files. It can also generate a html preview.
+This is a simple node.js script that converts markdown into epub files. It can also generate a html preview.
 
+If you want to make something similar yourself:
 - For generating html from markdown I'm using [markdown-it](https://github.com/markdown-it/markdown-it).
 - For making epub files I'm using [jszip](https://github.com/Stuk/jszip) (an epub is just a zip with specific contents).
-- For hyphenation I'm using [hyphen](https://github.com/ytiurin/hyphen)
+- For hyphenation I'm using [hyphen](https://github.com/ytiurin/hyphen).
 
 ## commands
 By default the script loads files from the `./content` folder. You can change this in `./src/constants.js`. Take note that you need to change both `SOURCE_PATH` and `TEXT_CONTENT` - they parse relative paths differently.
