@@ -1,16 +1,17 @@
 import React from 'react';
 
 import Prose from './Prose';
+import { TEXT_CONTEXT } from '../constants';
 const generateBookData = require('../functions/generateBookData');
 
-function getMarkdown(textContext) {
-  const keys = textContext.keys();
-  const values = keys.map(key => ({ fileName: key.replace(/^\.\//, ''), markdown: textContext(key).default }));
+function getMarkdown() {
+  const keys = TEXT_CONTEXT.keys();
+  const values = keys.map(key => ({ fileName: key.replace(/^\.\//, ''), markdown: TEXT_CONTEXT(key).default }));
   return values;
 }
 
-function App({ textContext }) {
-  const bookData = generateBookData(getMarkdown(textContext));
+function App() {
+  const bookData = generateBookData(getMarkdown());
 
   return <div id="App">
     {Object
