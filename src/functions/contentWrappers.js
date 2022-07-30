@@ -1,14 +1,18 @@
 function getContentOpf(data) {
-  let authorSort = data.author.split(' ');
-  authorSort.unshift(authorSort.pop());
-  authorSort = authorSort.join(' ').replace(' ', ', ');
+  const authorSort = data.author.reduce((accumulator, curr) => {
+    const sort = curr.split(' ');
+    sort.unshift(sort.pop());
+    accumulator.push(sort.join(' ').replace(' ', ', '));
+    return accumulator;
+  }, []).join(' &amp; ');
+
 
   return `<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="uuid">
   <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:title>${data.title}</dc:title>
-    <dc:creator opf:role="aut" opf:file-as="${authorSort}">${data.author}</dc:creator>
+    ${data.author.map(author => `<dc:creator opf:role="aut" opf:file-as="${authorSort}">${author}</dc:creator>`)}
     <dc:language>${data.language}</dc:language>
-    <dc:publisher>${data.publisher}</dc:publisher>
+    <dc:publisher>${data.publisher.join(', ')}</dc:publisher>
     </metadata>
   <manifest>
     <item id="text.xhtml" href="Text/text.xhtml" media-type="application/xhtml+xml"/>

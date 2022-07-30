@@ -16,12 +16,12 @@ By default the script loads files from the `./content` folder. You can change th
 
 ## settings
 Settings are located in `./src/constants.js`.
-`author` - default author of the book.
-`publisher` - default publisher of the book.
-`language` - default language code of the book, can be overridden by the `language` param if `SETTINGS.parseGtAsProps` is set to `true`.
-`parseGtAsProps` - enables special parameters parsed from lines starting with `>`, check below.
-`addEmptyLines` - markdown removes single linebreaks by default, this simply doubles every linebreak to display them as paragraphs.
-`hyphenate` - adds soft hyphens.
+- `author` - default author of the book, can be overridden by the `author` param if `SETTINGS.parseGtAsProps` is set to `true`.
+- `publisher` - default publisher of the book, can be overridden same as author.
+- `language` - default language code of the book, can be overridden same as author.
+- `parseGtAsProps` - enables special parameters parsed from lines starting with `>`, check below.
+- `addEmptyLines` - markdown removes single linebreaks by default, this simply doubles every linebreak to display them as paragraphs.
+- `hyphenate` - adds soft hyphens.
 
 ## special parameters
 If you set `SETTINGS.parseGtAsProps` as true all lines starting with `>` will be treated as parameters. If the param starts with `#` it is marked as a tag. Otherwise the script expects key value pairs separated by two colons.

@@ -12,8 +12,14 @@ function generateBookData(markdownFiles) {
         title,
         isStoryGroup,
         language: data.params?.language,
+        author: [],
+        publisher: [],
         sections: [],
       };
+      if (![undefined, ''].includes(data.params?.author))
+        bookData[title].author.push(data.params.author);
+      if (![undefined, ''].includes(data.params?.publisher))
+        bookData[title].publisher.push(data.params.publisher);
       bookData[title].sections.push(data);
     }
   }
