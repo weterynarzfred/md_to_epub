@@ -6,6 +6,7 @@ const SETTINGS = {
   parseGtAsProps: true,
   addEmptyLines: true,
   hyphenate: true,
+  filter: data => data.params.tag === 'prose',
 };
 
 module.exports = { SOURCE_PATH, SETTINGS };

@@ -56,7 +56,7 @@ function processMarkdown(inputMarkdown, fileName) {
   const data = SETTINGS.parseGtAsProps ?
     separateParams(inputMarkdown) :
     { markdown: inputMarkdown, props: {} };
-  if (SETTINGS.parseGtAsProps && data.params.tag !== 'prose') return false;
+  if (SETTINGS.filter !== undefined && !SETTINGS.filter(data)) return false;
   data.html = md.render(preprocessMarkdown(data));
   data.title = fileName.replace(/\.md$/, '');
 

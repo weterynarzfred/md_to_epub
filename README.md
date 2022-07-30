@@ -22,6 +22,7 @@ Settings are located in `./src/constants.js`.
 - `parseGtAsProps` - enables special parameters parsed from lines starting with `>`, check below.
 - `addEmptyLines` - markdown removes single linebreaks by default, this simply doubles every linebreak to display them as paragraphs.
 - `hyphenate` - adds soft hyphens.
+- `filter` - a function that will decide whether to parse a file or skip it
 
 ## special parameters
 If you set `SETTINGS.parseGtAsProps` as true all lines starting with `>` will be treated as parameters. If the param starts with `#` it is marked as a tag. Otherwise the script expects key value pairs separated by two colons.
@@ -45,7 +46,6 @@ will be parsed as:
 }
 ```
 
-- Only files tagged as `prose` will be parsed.
 - Files with same `story` param will be grouped together.
 - Files are ordered by the `order` param if available or the name of the file.
 - `language` param will override `SETTINGS.language` for the specific story. If multiple files belong to the same story, only the language of the first one will be set in the epub.
