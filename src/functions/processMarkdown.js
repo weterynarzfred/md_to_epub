@@ -1,7 +1,10 @@
 const { SETTINGS } = require('../constants');
 
 const MarkdownIt = require('markdown-it'),
-  md = new MarkdownIt();
+  md = new MarkdownIt({
+    html: true,
+    typographer: true,
+  });
 
 function separateParams(inputMarkdown) {
   const params = {};
@@ -38,16 +41,23 @@ function preprocessMarkdown(data) {
 
   if (![undefined, ''].includes(data.params?.story)) {
     data.markdown = data.markdown
-      .replaceAll(/^(#+) /gm, '$1# '); // increase heading depth
+      .replaceAll(/^# /gm, '## '); // increase first heading depth
   }
 
   if (SETTINGS.hyphenate) {
-    const lang = data.params?.language ?? SETTINGS.language;
+    const lang = [undefined, ''].includes(data.params?.language) ? SETTINGS.language : data.params.language;
     try {
       const hyphen = require(`hyphen/${lang}`);
       data.markdown = hyphen.hyphenateHTMLSync(data.markdown);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(`error with hyphenation, language: ${lang}`);
+    }
   }
+
+  data.markdown = data.markdown
+    .replaceAll(/(\*\*\*|---|___)/g, `<div class="separator">
+  *<span>*</span>*
+  </div>`);
 
   return data.markdown;
 }

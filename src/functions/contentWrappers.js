@@ -6,11 +6,12 @@ function getContentOpf(data) {
     return accumulator;
   }, []).join(' &amp; ');
 
+  const authors = data.author.map(author => `<dc:creator opf:role="aut" opf:file-as="${authorSort}">${author}</dc:creator>`).join("\n");
 
   return `<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="uuid">
   <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:title>${data.title}</dc:title>
-    ${data.author.map(author => `<dc:creator opf:role="aut" opf:file-as="${authorSort}">${author}</dc:creator>`)}
+    ${authors}
     <dc:language>${data.language}</dc:language>
     <dc:publisher>${data.publisher.join(', ')}</dc:publisher>
     </metadata>

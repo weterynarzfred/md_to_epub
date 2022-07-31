@@ -7,8 +7,8 @@ const { SETTINGS } = require('../constants');
 function makeEpub(data) {
   const { getHtmlStructure, getContentOpf } = require('./contentWrappers');
 
-  data.author = data.author ?? [SETTINGS.author];
-  data.publisher = data.publisher ?? [SETTINGS.publisher];
+  data.author = data.author.length === 0 ? [SETTINGS.author] : data.author;
+  data.publisher = data.publisher.length === 0 ? [SETTINGS.publisher] : data.publisher;
   data.language = data.language ?? SETTINGS.language;
 
   zip = new JSZip();
