@@ -3,10 +3,12 @@ const SETTINGS = {
   author: 'Weterynarzfred',
   publisher: 'Weterynarzfred Publishing House',
   language: 'en',
+  filter: data => data.params.tag === 'prose',
   parseGtAsProps: true,
   addEmptyLines: true,
   hyphenate: true,
-  filter: data => data.params.tag === 'prose',
+  replaceSeparators: true,
+  stripCodeBlocks: ['dataviewjs'],
 };
 
 module.exports = { SOURCE_PATH, SETTINGS };

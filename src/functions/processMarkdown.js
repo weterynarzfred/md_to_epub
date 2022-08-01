@@ -30,6 +30,19 @@ function separateParams(inputMarkdown) {
 }
 
 function preprocessMarkdown(data) {
+  if (SETTINGS.stripCodeBlocks) {
+    if (Array.isArray(SETTINGS.stripCodeBlocks)) {
+      const regexp = new RegExp(
+        "```(" +
+        SETTINGS.stripCodeBlocks.join("|") +
+        ")\\s*$.*?```", "gms"
+      );
+      data.markdown = data.markdown.replaceAll(regexp, '');
+    } else {
+      data.markdown = data.markdown.replaceAll(/```.*?```/gs, '');
+    }
+  }
+
   data.markdown = data.markdown
     .replaceAll(/^— /gm, '—&#x2004;') // change spaces after em-dashes to constant width
     .replaceAll(/ ([a-zA-Z—–\-]) /g, " $1&nbsp;"); // deal with orphans
@@ -54,10 +67,12 @@ function preprocessMarkdown(data) {
     }
   }
 
-  data.markdown = data.markdown
-    .replaceAll(/(\*\*\*|---|___)/g, `<div class="separator">
+  if (SETTINGS.replaceSeparators) {
+    data.markdown = data.markdown
+      .replaceAll(/(\*\*\*|---|___)/g, `<div class="separator">
   *<span>*</span>*
   </div>`);
+  }
 
   return data.markdown;
 }

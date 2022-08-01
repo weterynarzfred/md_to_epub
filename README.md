@@ -19,10 +19,12 @@ Settings are located in `./src/constants.js`.
 - `author` - default author of the book, can be overridden by the `author` param if `SETTINGS.parseGtAsProps` is set to `true`.
 - `publisher` - default publisher of the book, can be overridden same as author.
 - `language` - default language code of the book, can be overridden same as author.
+- `filter` - a function that will decide whether to parse a file or skip it
 - `parseGtAsProps` - enables special parameters parsed from lines starting with `>`, check below.
 - `addEmptyLines` - markdown removes single linebreaks by default, this simply doubles every linebreak to display them as paragraphs.
 - `hyphenate` - adds soft hyphens.
-- `filter` - a function that will decide whether to parse a file or skip it
+- `replaceSeparators` - replaces markdown separators (`<hr>`) with stylized asterisks.
+- `stripCodeBlocks` - an array of code languages that should be removed, set to `true` to remove all code blocks.
 
 ## special parameters
 If you set `SETTINGS.parseGtAsProps` as true all lines starting with `>` will be treated as parameters. If the param starts with `#` it is marked as a tag. Otherwise the script expects key value pairs separated by two colons.

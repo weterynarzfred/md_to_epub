@@ -25,16 +25,16 @@
     ]
   },
   "dependencies": {
+    "hyphen": "^1.6.4",
+    "markdown-it": "^13.0.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "hyphen": "^1.6.4",
     "jszip": "^3.10.0",
-    "markdown-it": "^13.0.1",
     "raw-loader": "^4.0.2",
     "react-app-rewired": "^2.2.1",
+    "react-scripts": "^5.0.1",
     "sass": "^1.54.0"
   }
 }
