@@ -31,6 +31,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "cli-progress": "^3.11.2",
     "jszip": "^3.10.0",
     "raw-loader": "^4.0.2",
     "react-app-rewired": "^2.2.1",
