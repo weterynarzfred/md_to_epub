@@ -2,6 +2,7 @@ const fs = require('fs');
 
 const { SOURCE_PATH } = require('./constants');
 const generateBookData = require('./functions/generateBookData');
+const convertToPdf = require('./functions/convertToPdf');
 
 function readInputFiles() {
   const isMarkdownFileRegex = new RegExp('\.md$');
@@ -13,7 +14,7 @@ function readInputFiles() {
     }));
 }
 
-function saveOutputFiles(bookData) {
+async function saveOutputFiles(bookData) {
   const makeEpub = require('./functions/makeEpub');
 
   if (!fs.existsSync('./output')) {
@@ -21,7 +22,8 @@ function saveOutputFiles(bookData) {
   }
 
   for (const title in bookData) {
-    makeEpub(bookData[title]);
+    await makeEpub(bookData[title]);
+    convertToPdf(bookData[title], 'epub');
   }
 }
 
