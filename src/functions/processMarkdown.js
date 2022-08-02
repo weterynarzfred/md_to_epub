@@ -69,12 +69,12 @@ function preprocessMarkdown(data) {
 
   if (SETTINGS.replaceSeparators) {
     data.markdown = data.markdown
-      .replaceAll(/(\*\*\*|---|___)\n+([^\n]*)/g, `
+      .replaceAll(/(\*\*\*|---|___)\n+([^\n]*)/g, (_g1, _g2, g3) => `
 <div class="no-page-break">
   <div class="separator">
     *<span>*</span>*
   </div>
-  <p>$2</p>
+  ${md.render(g3)}
 </div>
   `);
   }
@@ -86,7 +86,7 @@ function processMarkdown(inputMarkdown, fileName) {
   const data = SETTINGS.parseGtAsProps ?
     separateParams(inputMarkdown) :
     { markdown: inputMarkdown, props: {} };
-  if (SETTINGS.filter !== undefined && !SETTINGS.filter(data)) return false;
+  if (SETTINGS.filter !== undefined && !SETTINGS.filter(data.params, fileName)) return false;
   data.html = md.render(preprocessMarkdown(data));
   data.title = fileName.replace(/\.md$/, '');
 

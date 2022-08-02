@@ -30,10 +30,7 @@ function makeEpub(data) {
     zip
       .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
       .pipe(fs.createWriteStream('./output/' + data.fileName + '.epub'))
-      .on('finish', () => {
-        console.log(data.title + '.epub done');
-        resolve();
-      });
+      .on('finish', resolve);
   });
 }
 
