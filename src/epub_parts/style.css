@@ -1,24 +1,36 @@
 p {
   text-align: justify;
   hyphens: auto;
-  margin: 0.5em 0;
+  margin: 0;
+  line-height: 1.4;
   text-indent: 1.5em;
 }
 
 h1 {
   text-align: center;
-  margin: 6em 0 1em 0;
-  page-break-after: always;
+  margin: 3em 0 1em 0;
+  font-size: 2.62em;
 }
 
 h2 {
   text-align: center;
   font-weight: 400;
   margin-top: 2em;
+  font-size: 1.62em;
 }
 
 .section {
-  page-break-after: always;
+  break-after: page;
+}
+
+h1 + p,
+h2 + p,
+h3 + p,
+.pov + p,
+.separator + p,
+li p,
+ol p {
+  text-indent: 0;
 }
 
 hr {
@@ -29,13 +41,13 @@ hr {
 
 .separator {
   text-align: center;
-  margin: 2.5rem 0 0.75rem 0;
+  margin: 2rem 0 0.75rem 0;
   font-size: 1rem;
 }
 
 .separator span {
   font-size: 2.5rem;
-  vertical-align: -0.29em;
+  vertical-align: -0.27em;
 }
 
 .pov {
@@ -43,4 +55,8 @@ hr {
   margin-top: -1em;
   margin-bottom: 1em;
   font-weight: 700;
+}
+
+.no-page-break {
+  page-break-inside: avoid;
 }

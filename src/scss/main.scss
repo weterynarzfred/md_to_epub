@@ -26,6 +26,9 @@
   font-style: italic;
 }
 
+// @import url("https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+// @import url("https://fonts.googleapis.com/css2?family=Ibarra+Real+Nova:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
 body {
   background-color: #eee;
   background-image: url("../media/dust_scratches.webp");
@@ -37,6 +40,8 @@ body {
   padding: 0 1em;
   margin: 6em auto;
   font-family: "Computer Modern Roman", serif;
+  // font-family: "Crimson Text", serif;
+  // font-family: "Ibarra Real Nova", serif;
   font-size: 1.4em;
 
   .Prose {

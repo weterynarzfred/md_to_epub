@@ -8,7 +8,7 @@ function Section({ section }) {
     section?.params?.language;
 
   return <div
-    className="Section"
+    className="section"
     lang={lang}
     dangerouslySetInnerHTML={{ __html: section.html }}
   >

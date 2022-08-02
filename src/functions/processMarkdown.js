@@ -69,9 +69,14 @@ function preprocessMarkdown(data) {
 
   if (SETTINGS.replaceSeparators) {
     data.markdown = data.markdown
-      .replaceAll(/(\*\*\*|---|___)/g, `<div class="separator">
-  *<span>*</span>*
-  </div>`);
+      .replaceAll(/(\*\*\*|---|___)\n+([^\n]*)/g, `
+<div class="no-page-break">
+  <div class="separator">
+    *<span>*</span>*
+  </div>
+  <p>$2</p>
+</div>
+  `);
   }
 
   return data.markdown;
