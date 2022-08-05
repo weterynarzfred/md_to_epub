@@ -1,6 +1,5 @@
 // cSpell:ignore ęóąśłżźćńĘÓĄŚŁŻŹĆŃ
 
-const { on } = require('events');
 const fs = require('fs');
 const JSZip = require('jszip');
 const { SETTINGS } = require('../constants');
