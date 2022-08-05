@@ -1,7 +1,7 @@
 const fs = require('fs');
 const cliProgress = require('cli-progress');
 
-const { SOURCE_PATH } = require('./constants');
+const { SOURCE_PATH, SETTINGS } = require('./constants');
 const generateBookData = require('./functions/generateBookData');
 const convertToPdf = require('./functions/convertToPdf');
 
@@ -28,23 +28,29 @@ async function saveOutputFiles(bookData) {
   }, cliProgress.Presets.shades_classic);
 
   const bar1 = multiBar.create(length, 0);
-  const bar2 = multiBar.create(length, 0);
+  let bar2;
+  if (SETTINGS.convertToPdf) {
+    bar2 = multiBar.create(length, 0);
+  }
 
   let index = 0;
   for (const title in bookData) {
     await makeEpub(bookData[title]);
     bar1.increment(1, { filename: title });
-    const promise = convertToPdf(bookData[title], 'epub');
-    promise.then(() => {
-      index++;
-      bar2.increment(1, { filename: title });
-      if (index === length) {
-        bar2.update(length, { filename: 'pdf files done' });
-        multiBar.stop();
-      }
-    });
+    if (SETTINGS.convertToPdf) {
+      const promise = convertToPdf(bookData[title], 'epub');
+      promise.then(() => {
+        index++;
+        bar2.increment(1, { filename: title });
+        if (index === length) {
+          bar2.update(length, { filename: 'pdf files done' });
+          multiBar.stop();
+        }
+      });
+    }
   }
   bar1.update(length, { filename: 'epub files done' });
+  if (!SETTINGS.convertToPdf) multiBar.stop();
 }
 
 const markdownFiles = readInputFiles();

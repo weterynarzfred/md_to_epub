@@ -4,6 +4,7 @@ const SETTINGS = {
   author: 'Weterynarzfred',
   publisher: 'Weterynarzfred Publishing House',
   language: 'en',
+  convertToPdf: true,
   filter: (params, _fileName) => params?.tag === 'prose',
   parseGtAsProps: true,
   addEmptyLines: true,
