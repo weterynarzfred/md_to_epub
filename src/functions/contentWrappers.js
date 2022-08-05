@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 function getContentOpf(data) {
   const authorSort = data.author.reduce((accumulator, curr) => {
     const sort = curr.split(' ');
@@ -5,21 +7,22 @@ function getContentOpf(data) {
     accumulator.push(sort.join(' ').replace(' ', ', '));
     return accumulator;
   }, []).join(' &amp; ');
-
   const authors = data.author.map(author => `<dc:creator opf:role="aut" opf:file-as="${authorSort}">${author}</dc:creator>`).join("\n");
+  const hash = crypto.createHash('md5').update(JSON.stringify(data)).digest('hex');
 
-  return `<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="uuid">
+  return `<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="md_hash">
   <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:title>${data.title}</dc:title>
     ${authors}
     <dc:language>${data.language}</dc:language>
     <dc:publisher>${data.publisher.join(', ')}</dc:publisher>
+    <dc:identifier id="md_hash" opf:scheme="md_hash">${hash}</dc:identifier>
     </metadata>
   <manifest>
     <item id="text.xhtml" href="Text/text.xhtml" media-type="application/xhtml+xml"/>
     <item id="style.css" href="Styles/style.css" media-type="text/css"/>
   </manifest>
-  <spine toc="id1">
+  <spine>
     <itemref idref="text.xhtml"/>
   </spine>
 </package>`;

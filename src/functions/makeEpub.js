@@ -1,5 +1,6 @@
 // cSpell:ignore ęóąśłżźćńĘÓĄŚŁŻŹĆŃ
 
+const { on } = require('events');
 const fs = require('fs');
 const JSZip = require('jszip');
 const { SETTINGS } = require('../constants');
@@ -14,7 +15,7 @@ function makeEpub(data) {
     data.language = data.language ?? SETTINGS.language;
 
     zip = new JSZip();
-    zip.file('mimetype', fs.readFileSync('./src/epub_parts/mimetype'));
+    zip.file('mimetype', 'application/epub+zip');
 
     const zipMeta = zip.folder('META-INF');
     zipMeta.file('container.xml', fs.readFileSync('./src/epub_parts/container.xml'));
@@ -28,7 +29,7 @@ function makeEpub(data) {
 
     data.fileName = (data.isStoryGroup ? '_' : '') + sanitizeFilename(data.title);
     zip
-      .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
+      .generateNodeStream({ type: 'nodebuffer', mimeType: 'application/epub+zip' })
       .pipe(fs.createWriteStream('./output/' + data.fileName + '.epub'))
       .on('finish', resolve);
   });
