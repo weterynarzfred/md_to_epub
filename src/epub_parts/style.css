@@ -63,3 +63,8 @@ hr {
 .no-page-break {
   page-break-inside: avoid;
 }
+
+.comment {
+  opacity: 0.5;
+  font-size: 0.8em;
+}

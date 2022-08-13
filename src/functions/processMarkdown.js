@@ -45,7 +45,11 @@ function preprocessMarkdown(data) {
 
   data.markdown = data.markdown
     .replaceAll(/^— /gm, '—&#x2004;') // change spaces after em-dashes to constant width
-    .replaceAll(/ ([a-zA-Z—–\-]) /g, " $1&nbsp;"); // deal with orphans
+    .replaceAll(/ ([a-zA-Z—–\-]) /g, " $1&nbsp;") // deal with orphans
+    .replaceAll(
+      /%%(.*?[^\/])%%/g,
+      SETTINGS.stripComments ? "" : "<span class=\"comment\">$1</span>"
+    ); // mark comments
 
   if (SETTINGS.addEmptyLines) {
     data.markdown = data.markdown

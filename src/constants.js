@@ -1,5 +1,5 @@
 // const SOURCE_PATH = "./content/";
-const SOURCE_PATH = "P:/pisanie/pisanie/";
+const SOURCE_PATH = "P:/pisanie/";
 const SETTINGS = {
   author: 'Weterynarzfred',
   publisher: 'Weterynarzfred Publishing House',
@@ -11,10 +11,12 @@ const SETTINGS = {
   hyphenate: true,
   replaceSeparators: true,
   stripCodeBlocks: ['dataview', 'dataviewjs'],
+  stripComments: true,
 };
 
 module.exports = { SOURCE_PATH, SETTINGS };
 
 try {
-  module.exports.TEXT_CONTEXT = require.context("P:/pisanie/pisanie/", false, /\.md$/);
+  // module.exports.TEXT_CONTEXT = require.context("../content/", false, /\.md$/);
+  module.exports.TEXT_CONTEXT = require.context("P:/pisanie/", false, /\.md$/);
 } catch (error) { }
