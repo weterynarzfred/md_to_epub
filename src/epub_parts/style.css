@@ -24,14 +24,21 @@ h2 {
   font-size: 1.62rem;
 }
 
+h1,
+h2 {
+  break-before: page;
+}
+
 .pov {
   text-align: center;
+  margin-top: 2.6em;
   margin-bottom: 1.4rem;
   font-weight: 700;
 }
 
-.section {
-  break-after: page;
+h1 + .pov,
+h2 + .pov {
+  margin-top: 0.3rem;
 }
 
 h1 + p,

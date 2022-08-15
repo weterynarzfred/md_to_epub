@@ -73,15 +73,23 @@ function preprocessMarkdown(data) {
 
   if (SETTINGS.replaceSeparators) {
     data.markdown = data.markdown
-      .replaceAll(/(\*\*\*|---|___)\n+([^\n]*)/g, (_g1, _g2, g3) => `
+      .replaceAll(/(\*\*\*|---|___)\n+([^\n]*)/g, (_match, _g1, g2) => `
 <div class="no-page-break">
   <div class="separator">
     *<span>*</span>*
   </div>
-  ${md.render(g3)}
+  ${md.render(g2)}
 </div>
   `);
   }
+
+  data.markdown = data.markdown
+    .replaceAll(/(<div class="pov">.*?<\/div>)\n+([^\n]*)/g, (_match, g1, g2) => `
+<div class="no-page-break">
+  ${g1}
+  ${md.render(g2)}
+</div>
+  `);
 
   return data.markdown;
 }
