@@ -35,15 +35,14 @@ function getHtmlStructure(data) {
   }
 
   return `<?xml version="1.0" encoding="utf-8"?>
-  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${data.language}" lang="${data.language}">
-    <head>
-      <title />
-      <link href="../Styles/style.css" rel="stylesheet" type="text/css" />
-    </head>
-  
-    <body>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${data.language}" lang="${data.language}">
+  <head>
+    <title />
+    <link href="../Styles/style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
     ${data.isStoryGroup ? `<h1>${data.title}</h1>` : ''}
-${content}
+    ${content}
   </body>
 </html>
 `;
