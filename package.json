@@ -32,10 +32,10 @@
   },
   "devDependencies": {
     "cli-progress": "^3.11.2",
-    "jszip": "^3.10.0",
+    "jszip": "^3.10.1",
     "raw-loader": "^4.0.2",
     "react-app-rewired": "^2.2.1",
     "react-scripts": "^5.0.1",
-    "sass": "^1.54.0"
+    "sass": "^1.54.4"
   }
 }
