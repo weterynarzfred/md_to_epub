@@ -4,8 +4,8 @@ p {
   margin: 0;
   line-height: 1.4em;
   text-indent: 1.5em;
-  widows: 3;
-  orphans: 3;
+  widows: 4;
+  orphans: 4;
 }
 
 h1 {
@@ -75,4 +75,8 @@ hr {
 .comment {
   opacity: 0.5;
   font-size: 0.8em;
+}
+
+.author {
+  text-align: center;
 }

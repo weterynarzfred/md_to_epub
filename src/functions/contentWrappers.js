@@ -41,7 +41,10 @@ function getHtmlStructure(data) {
     <link href="../Styles/style.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
-    ${data.isStoryGroup ? `<h1>${data.title}</h1>` : ''}
+    ${data.isStoryGroup ? `
+<h1>${data.title}</h1>
+<div class="author">${data.author.join(', ')}</div>
+` : ''}
     ${content}
   </body>
 </html>
