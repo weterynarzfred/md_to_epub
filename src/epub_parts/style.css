@@ -5,7 +5,7 @@ p {
   line-height: 1.4em;
   text-indent: 1.5em;
   widows: 4;
-  orphans: 4;
+  orphans: 2;
 }
 
 h1 {

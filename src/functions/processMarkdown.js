@@ -30,6 +30,7 @@ function separateParams(inputMarkdown) {
 }
 
 function preprocessMarkdown(data) {
+  data.raw = data.markdown;
   if (SETTINGS.stripCodeBlocks) {
     if (Array.isArray(SETTINGS.stripCodeBlocks)) {
       const regexp = new RegExp(

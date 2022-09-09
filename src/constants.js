@@ -3,12 +3,13 @@ const SOURCE_PATH = "P:/pisanie/";
 const SETTINGS = {
   author: 'Weterynarzfred',
   publisher: 'Weterynarzfred Publishing House',
-  language: 'en',
-  convertToPdf: true,
-  filter: (params, _fileName) => params?.tag === 'prose' && params?.skip !== 'true',
+  language: 'en', // when using with xelatex only polish and english are working for now
+  convertToPdf: true, // uses xelatex
+  filter: (params, _fileName) => params?.tag === 'prose' &&
+    params?.skip !== 'true',
   parseGtAsProps: true,
   addEmptyLines: true,
-  hyphenate: true,
+  hyphenate: true, // pdfs made with xelatex are always hyphenated
   replaceSeparators: true,
   stripCodeBlocks: ['dataview', 'dataviewjs'],
   stripComments: true,

@@ -1,3 +1,13 @@
 {
-  "cSpell.words": ["epub", "idref", "itemref", "jszip", "OEBPS", "PAGENUM"]
+  "cSpell.words": [
+    "epub",
+    "idref",
+    "itemref",
+    "jszip",
+    "OEBPS",
+    "PAGENUM",
+    "pdfs",
+    "scenebreak",
+    "xelatex"
+  ]
 }

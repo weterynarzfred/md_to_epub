@@ -3,7 +3,8 @@ const cliProgress = require('cli-progress');
 
 const { SOURCE_PATH, SETTINGS } = require('./constants');
 const generateBookData = require('./functions/generateBookData');
-const convertToPdf = require('./functions/convertToPdf');
+// const convertToPdf = require('./functions/convertToPdf');
+const makePdf = require('./functions/makePdf');
 
 function readInputFiles() {
   const isMarkdownFileRegex = new RegExp('\.md$');
@@ -38,7 +39,9 @@ async function saveOutputFiles(bookData) {
     await makeEpub(bookData[title]);
     bar1.increment(1, { filename: title });
     if (SETTINGS.convertToPdf) {
-      const promise = convertToPdf(bookData[title], 'epub');
+      // TODO: allow choosing between ebook-convert and xelatex
+      // const promise = convertToPdf(bookData[title], 'epub');
+      const promise = makePdf(bookData[title]);
       promise.then(() => {
         index++;
         bar2.increment(1, { filename: title });
