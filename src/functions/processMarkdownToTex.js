@@ -19,7 +19,6 @@ function processMarkdownToTex(data) {
 
 
   data.markdownTex = data.markdownTex
-    .replaceAll(/([_\^])/gm, '\\$1') // escape some characters
     .replaceAll(/^— /gm, '— ') // change spaces after em-dashes to constant width
     .replaceAll(/(?<= )([a-zA-Z—–\-]) /g, "$1~") // deal with orphans
     .replaceAll(
@@ -38,7 +37,9 @@ function processMarkdownToTex(data) {
       .replaceAll(/(\*\*\*|---|___)\n*/g, `\\scenebreak\n`);
   }
 
+  // cSpell:ignore sectionpov
   data.markdownTex = data.markdownTex
+    .replaceAll(/(^#+ .*\n+)<div class="pov">(.*?)<\/div>\n*/gm, '$1\n\\sectionpov{$2}\n')
     .replaceAll(/<div class="pov">(.*?)<\/div>\n*/g, '\\pov{$1}\n');
 
   // cSpell:ignore subsubsection  
@@ -47,7 +48,8 @@ function processMarkdownToTex(data) {
     .replaceAll(/^# (.*)/gm, '\\section{$1}')
     .replaceAll(/^## (.*)/gm, '\\subsection{$1}')
     .replaceAll(/^### (.*)/gm, '\\subsubsection{$1}')
-    .replaceAll(/—/g, '\\mbox{---}'); // change em dashes to latex
+    .replaceAll(/—/g, '\\mbox{---}') // change em dashes to latex
+    .replaceAll(/([_\^])/g, '\\$1'); // escape some characters
 
   data.markdownTex = data.markdownTex
     .replaceAll(/\*(.*?)\*/g, '\\emph{$1}');

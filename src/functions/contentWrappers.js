@@ -100,7 +100,8 @@ function getTexStructure(data) {
 
 % styling titles
 \\usepackage{titlesec}
-\\titleformat{\\section}[block]{\\Large\\bfseries\\filcenter}{}{1em}{}
+\\titleformat{\\section}[block]{\\Large\\bfseries\\filcenter}{}{}{}
+\\titlespacing*{\\section}{0pt}{2em}{2.7em}
 \\setcounter{secnumdepth}{0}
 
 % paragraphs
@@ -127,12 +128,18 @@ function getTexStructure(data) {
 \\pagestyle{fancy}
 
 % macros
-\\usepackage{xspace}
 \\newcommand{\\pov}[1]{
   \\needspace{2\\baselineskip}
-  \\vspace{1.2em}
-  \\centerline{\\textbf{#1}}
   \\vspace{1.45em}
+  \\centerline{\\textbf{#1}}
+  \\vspace{1.5em}
+  \\noindent\\ignorespaces
+}
+
+\\newcommand{\\sectionpov}[1]{
+  \\vspace{-1.5em}
+  \\centerline{\\textbf{#1}}
+  \\vspace{1.5em}
   \\noindent\\ignorespaces
 }
 
@@ -143,13 +150,13 @@ function getTexStructure(data) {
   \\begin{center}
     \\pgfornament[width = 3cm]{88}
   \\end{center}
-  \\vspace{1.2em}
+  \\vspace{1.45em}
   \\noindent\\ignorespaces
 }
 
 % -----
-\\title{\\bfseries{${data.title.replace('_', '\\_')}}}
-\\author{${data.author.join(', ').replace('_', '\\_')}}
+\\title{\\bfseries{${data.title.replace('_', '\\_')}}\\vspace{-2em}}
+\\author{\\small{${data.author.join(', ').replace('_', '\\_')}}}
 \\date{}
 
 \\begin{document}
