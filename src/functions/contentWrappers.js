@@ -64,16 +64,20 @@ function getTexStructure(data) {
     content += section.markdownTex;
   }
 
+  const style = 'print'; // 'print' | 'screen'
+
   // cSpell:disable
-  return `\\documentclass[a4paper,9pt]{extbook}
+  return `\\documentclass[a4paper,9pt,twoside]{extarticle}
 
 \\usepackage[protrusion]{microtype} % micro typography - protrusions
 \\usepackage[${$languages[data.language]}]{babel} % for hyphenation, I think
 \\usepackage[all,defaultlines=2]{nowidow} % deal with widows and orphans
 \\usepackage{needspace}
+\\usepackage{lettrine}
+\\usepackage{pgfornament}
 
-% \\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=0cm, top=1.5cm, bottom=2.5cm, left=2cm, right=2cm, footskip=1cm]{geometry} % equal margins
-\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=1cm, top=1.5cm, bottom=2.5cm, left=1.5cm, right=1.5cm, footskip=1cm]{geometry} % printing margins
+${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=1.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm, footskip=1cm]{geometry}` : ''}
+${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=1cm, top=1.5cm, bottom=2.5cm, left=2cm, right=2cm, footskip=1cm]{geometry}` : ''}
 
 % hyphenation settings - https://tug.org/utilities/plain/cseq.html
 \\doublehyphendemerits=100000
@@ -85,12 +89,15 @@ function getTexStructure(data) {
 
 % set fonts
 \\usepackage{fontspec}
-\\setmainfont{cmu serif roman.ttf}[
-  BoldFont = cmu serif bold.ttf,
-  ItalicFont = cmu serif italic.ttf,
-]
+% \\setmainfont{CMU Serif Roman}
+\\setmainfont{Crimson Text}
 
-% I have no idea but it hides some warnings
+% substitute missing three per em space
+\\usepackage{newunicodechar}
+\\newfontfamily\\fallbackfont{CMU Serif Roman}
+\\newunicodechar{ }{{\\fallbackfont\\symbol{"2004}}}
+
+% I have no idea, but it hides some warnings
 \\makeatletter
   \\edef\\orig@output{\\the\\output}
   \\output{\\setbox\\@cclv\\vbox{\\unvbox\\@cclv\\vspace{-20pt plus 40pt}}\\orig@output}
@@ -100,9 +107,8 @@ function getTexStructure(data) {
 
 % styling titles
 \\usepackage{titlesec}
-\\titleformat{\\section}[block]{\\Large\\bfseries\\filcenter}{}{}{}
-\\titlespacing*{\\section}{0pt}{2em}{2.7em}
-\\setcounter{secnumdepth}{0}
+\\titleformat{\\section}[block]{\\Huge\\bfseries\\filcenter}{\\small\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
+\\titlespacing*{\\section}{0pt}{0pt}{5em}
 
 % paragraphs
 \\usepackage{parskip}
@@ -110,8 +116,8 @@ function getTexStructure(data) {
 \\setlength{\\parindent}{1.5em} % indentation
 
 % begin each section on a new page
-% \\newcommand\\sectionbreak{\\cleardoublepage}
-\\newcommand\\sectionbreak{\\clearpage}
+${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage\\vspace*{2em}}` : ''}
+${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em}}` : ''}
 
 % line height
 \\linespread{1.2}
@@ -121,8 +127,9 @@ function getTexStructure(data) {
 \\usepackage{fancyhdr}
 \\fancypagestyle{fancy}{
   \\fancyhf{}
-  \\fancyfoot[OR]{\\thepage}
-  \\fancyfoot[EL]{\\thepage}
+${style === 'screen' ? `\\fancyfoot[C]{--- \\thepage\\ ---}` : ''}
+${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
+\\fancyfoot[EL]{\\thepage}` : ''}
   \\renewcommand{\\headrulewidth}{0pt}
 }
 \\pagestyle{fancy}
@@ -131,19 +138,22 @@ function getTexStructure(data) {
 \\newcommand{\\pov}[1]{
   \\needspace{2\\baselineskip}
   \\vspace{1.45em}
-  \\centerline{\\textbf{#1}}
+  \\begin{center}
+  \\textbf{#1}
+  \\end{center}
   \\vspace{1.5em}
   \\noindent\\ignorespaces
 }
 
 \\newcommand{\\sectionpov}[1]{
-  \\vspace{-1.5em}
-  \\centerline{\\textbf{#1}}
+  \\vspace{0em}
+  \\begin{center}
+  \\textbf{#1}
+  \\end{center}
   \\vspace{1.5em}
   \\noindent\\ignorespaces
 }
 
-\\usepackage{pgfornament}
 \\newcommand{\\scenebreak}{
   \\needspace{2\\baselineskip}
   \\vspace{1.5em}
@@ -154,9 +164,27 @@ function getTexStructure(data) {
   \\noindent\\ignorespaces
 }
 
+\\usepackage{lmodern}
+\\newcount\\zzc
+\\makeatletter
+\\def\\zz{%
+\\ifnum\\prevgraf<\\c@L@lines
+\\zzc\\z@
+\\loop
+\\ifnum\\zzc<\\prevgraf
+\\advance\\zzc\\@ne
+\\afterassignment\\zzda\\count@\\L@parshape\\relax
+\\repeat
+\\parshape\\L@parshape
+\\fi}
+\\def\\zzda{\\afterassignment\\zzdb\\dimen@}
+\\def\\zzdb{\\afterassignment\\zzdef\\dimen@}
+\\def\\zzdef#1\\relax{\\edef\\L@parshape{\\the\\numexpr\\count@-1\\relax\\space #1}}
+\\makeatother
+
 % -----
-\\title{\\bfseries{${data.title.replace('_', '\\_')}}\\vspace{-2em}}
-\\author{\\small{${data.author.join(', ').replace('_', '\\_')}}}
+\\title{\\vspace{3em}\\Huge\\bfseries{${data.title.replace('_', '\\_')}}\\vspace{0em}}
+\\author{\\normalsize ${data.author.join(', ').replace('_', '\\_')}}
 \\date{}
 
 \\begin{document}

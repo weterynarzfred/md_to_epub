@@ -17,6 +17,12 @@ function processMarkdownToTex(data) {
     }
   }
 
+  // cSpell:ignore ęóąśłżźćńĘÓĄŚŁŻŹĆŃ lettrine lhang nindent findent realheight
+  data.markdownTex = data.markdownTex
+    .replaceAll(
+      /(# .*?\n(\n|<div class="pov">.*?<\/div>)*)(\*)?(— |"|„)?([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ])([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ,.?!;:]*)(.*?)\n/g,
+      '$1\\lettrine[lines=3, lhang=0, nindent=0.5em, findent=0em, realheight=true]{$5}{$6}$3$7\n\\zz\n'
+    );
 
   data.markdownTex = data.markdownTex
     .replaceAll(/^— /gm, '— ') // change spaces after em-dashes to constant width
@@ -29,7 +35,7 @@ function processMarkdownToTex(data) {
 
   if (SETTINGS.addEmptyLines) {
     data.markdownTex = data.markdownTex
-      .replaceAll(/$\n/gm, '\n\n');
+      .replaceAll(/(?<!\\zz)$\n/gm, '\n\n');
   }
 
   if (SETTINGS.replaceSeparators) {
