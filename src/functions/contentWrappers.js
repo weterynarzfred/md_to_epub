@@ -64,8 +64,9 @@ function getTexStructure(data) {
     content += section.markdownTex;
   }
 
-  const style = 'print'; // 'print' | 'screen'
+  const style = 'screen'; // 'print' | 'screen'
 
+  // TODO: add an option to disable drop caps
   // cSpell:disable
   return `\\documentclass[a4paper,9pt,twoside]{extarticle}
 
@@ -108,16 +109,16 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 % styling titles
 \\usepackage{titlesec}
 \\titleformat{\\section}[block]{\\Huge\\bfseries\\filcenter}{\\small\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
-\\titlespacing*{\\section}{0pt}{0pt}{5em}
+\\titlespacing*{\\section}{0pt}{0pt}{4.35em}
+
+% begin each section on a new page
+${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage\\vspace*{2em}}` : ''}
+${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em}}` : ''}
 
 % paragraphs
 \\usepackage{parskip}
 \\setlength{\\parskip}{0pt} % paragraph spacing
 \\setlength{\\parindent}{1.5em} % indentation
-
-% begin each section on a new page
-${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage\\vspace*{2em}}` : ''}
-${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em}}` : ''}
 
 % line height
 \\linespread{1.2}
@@ -131,6 +132,9 @@ ${style === 'screen' ? `\\fancyfoot[C]{--- \\thepage\\ ---}` : ''}
 ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 \\fancyfoot[EL]{\\thepage}` : ''}
   \\renewcommand{\\headrulewidth}{0pt}
+}
+\\fancypagestyle{plain}{
+  \\fancyhf{}
 }
 \\pagestyle{fancy}
 
@@ -156,11 +160,11 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 
 \\newcommand{\\scenebreak}{
   \\needspace{2\\baselineskip}
-  \\vspace{1.5em}
+  \\vspace{1.46em}
   \\begin{center}
     \\pgfornament[width = 3cm]{88}
   \\end{center}
-  \\vspace{1.45em}
+  \\vspace{1.46em}
   \\noindent\\ignorespaces
 }
 
