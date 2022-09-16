@@ -64,11 +64,14 @@ function getTexStructure(data) {
     content += section.markdownTex;
   }
 
-  const style = 'screen'; // 'print' | 'screen'
+  // const style = 'print';
+  const style = 'screen';
+  const margins = [1.4, 1.9, 1.9, 1.9];
+  const bidingOffset = 0.6;
 
   // TODO: add an option to disable drop caps
   // cSpell:disable
-  return `\\documentclass[a4paper,9pt,twoside]{extarticle}
+  return `\\documentclass[10pt,twoside]{extarticle}
 
 \\usepackage[protrusion]{microtype} % micro typography - protrusions
 \\usepackage[${$languages[data.language]}]{babel} % for hyphenation, I think
@@ -77,8 +80,8 @@ function getTexStructure(data) {
 \\usepackage{lettrine}
 \\usepackage{pgfornament}
 
-${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=1.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm, footskip=1cm]{geometry}` : ''}
-${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=1cm, top=1.5cm, bottom=2.5cm, left=2cm, right=2cm, footskip=1cm]{geometry}` : ''}
+${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
+${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] - bidingOffset / 2}cm, right=${margins[1] - bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
 
 % hyphenation settings - https://tug.org/utilities/plain/cseq.html
 \\doublehyphendemerits=100000
@@ -90,7 +93,6 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 
 % set fonts
 \\usepackage{fontspec}
-% \\setmainfont{CMU Serif Roman}
 \\setmainfont{Crimson Text}
 
 % substitute missing three per em space
@@ -108,12 +110,12 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 
 % styling titles
 \\usepackage{titlesec}
-\\titleformat{\\section}[block]{\\Huge\\bfseries\\filcenter}{\\small\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
-\\titlespacing*{\\section}{0pt}{0pt}{4.35em}
+\\titleformat{\\section}[block]{\\huge\\bfseries\\filcenter}{\\small\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
+\\titlespacing*{\\section}{0pt}{0pt}{3.77em}
 
 % begin each section on a new page
 ${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage\\vspace*{2em}}` : ''}
-${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em}}` : ''}
+${style === 'print' ? `\\newcommand\\sectionbreak{\\clearpage\\begingroup\\pagestyle{empty}\\cleardoublepage\\endgroup\\vspace*{2em}}` : ''}
 
 % paragraphs
 \\usepackage{parskip}
@@ -121,7 +123,7 @@ ${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em
 \\setlength{\\parindent}{1.5em} % indentation
 
 % line height
-\\linespread{1.2}
+\\linespread{1.15}
 
 % change page numbering style
 \\setlength{\\headheight}{15pt}
@@ -141,11 +143,11 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 % macros
 \\newcommand{\\pov}[1]{
   \\needspace{2\\baselineskip}
-  \\vspace{1.45em}
+  \\vspace{2\\baselineskip}
   \\begin{center}
   \\textbf{#1}
   \\end{center}
-  \\vspace{1.5em}
+  \\vspace{\\baselineskip}
   \\noindent\\ignorespaces
 }
 
@@ -154,17 +156,17 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
   \\begin{center}
   \\textbf{#1}
   \\end{center}
-  \\vspace{1.5em}
+  \\vspace{\\baselineskip}
   \\noindent\\ignorespaces
 }
 
 \\newcommand{\\scenebreak}{
   \\needspace{2\\baselineskip}
-  \\vspace{1.46em}
+  \\vspace{\\baselineskip}
   \\begin{center}
     \\pgfornament[width = 3cm]{88}
   \\end{center}
-  \\vspace{1.46em}
+  \\vspace{\\baselineskip}
   \\noindent\\ignorespaces
 }
 
