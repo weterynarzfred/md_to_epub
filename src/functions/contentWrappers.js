@@ -66,8 +66,8 @@ function getTexStructure(data) {
 
   // const style = 'print';
   const style = 'screen';
-  const margins = [1.4, 1.9, 1.9, 1.9];
-  const bidingOffset = 0.6;
+  const margins = [1.4, 1.5, 1.9, 1.5];
+  const bidingOffset = 0.5;
 
   // TODO: add an option to disable drop caps
   // cSpell:disable
@@ -80,8 +80,8 @@ function getTexStructure(data) {
 \\usepackage{lettrine}
 \\usepackage{pgfornament}
 
-${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
-${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] - bidingOffset / 2}cm, right=${margins[1] - bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
+${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=131mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] + bidingOffset / 2}cm, right=${margins[1] + bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
+${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=131mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
 
 % hyphenation settings - https://tug.org/utilities/plain/cseq.html
 \\doublehyphendemerits=100000
