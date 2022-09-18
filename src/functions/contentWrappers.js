@@ -66,8 +66,8 @@ function getTexStructure(data) {
 
   // const style = 'print';
   const style = 'screen';
-  const margins = [1.4, 1.5, 1.9, 1.5];
-  const bidingOffset = 0.5;
+  const margins = [1.4, 1.6, 1.9, 1.6];
+  const bidingOffset = 0.6;
 
   // TODO: add an option to disable drop caps
   // cSpell:disable
@@ -80,8 +80,8 @@ function getTexStructure(data) {
 \\usepackage{lettrine}
 \\usepackage{pgfornament}
 
-${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=131mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] + bidingOffset / 2}cm, right=${margins[1] + bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
-${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=131mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
+${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] + bidingOffset / 2}cm, right=${margins[1] + bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
+${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
 
 % hyphenation settings - https://tug.org/utilities/plain/cseq.html
 \\doublehyphendemerits=100000
@@ -117,6 +117,14 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=131mm, binding
 ${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage\\vspace*{2em}}` : ''}
 ${style === 'print' ? `\\newcommand\\sectionbreak{\\clearpage\\begingroup\\pagestyle{empty}\\cleardoublepage\\endgroup\\vspace*{2em}}` : ''}
 
+% table of contents
+\\usepackage[hidelinks]{hyperref}
+\\usepackage{titletoc}
+\\contentsmargin{0em}
+\\renewcommand\\contentspage{\\hspace{.2em}\\thecontentspage}
+\\renewcommand\\contentslabel{}
+\\dottedcontents{section}[0em]{}{}{0.5em}
+
 % paragraphs
 \\usepackage{parskip}
 \\setlength{\\parskip}{0pt} % paragraph spacing
@@ -142,7 +150,7 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 
 % macros
 \\newcommand{\\pov}[1]{
-  \\needspace{2\\baselineskip}
+  \\needspace{1.5\\baselineskip}
   \\vspace{2\\baselineskip}
   \\begin{center}
   \\textbf{#1}
@@ -161,7 +169,7 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 }
 
 \\newcommand{\\scenebreak}{
-  \\needspace{2\\baselineskip}
+  \\needspace{1.5\\baselineskip}
   \\vspace{\\baselineskip}
   \\begin{center}
     \\pgfornament[width = 3cm]{88}
@@ -197,6 +205,8 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 \\maketitle
 
 ${content}
+
+\\tableofcontents
 
 \\end{document}`;
   // cSpell:enable

@@ -14,10 +14,13 @@ function makePdf(data) {
     data.fileName = (data.isStoryGroup ? '_' : '') + sanitizeFilename(data.title);
 
     fs.writeFileSync('output/' + data.fileName + '.tex', getTexStructure(data));
-    exec(`xelatex --output-directory=output "output/${data.fileName}.tex"`, (error, _stdout, _stderr) => {
+    exec(`xelatex --output-directory=output "output/${data.fileName}.tex"`, async (error, _stdout, _stderr) => {
       if (error) console.error(data.title + '.pdf failed');
+      await new Promise(resolve => exec(`xelatex --output-directory=output "output/${data.fileName}.tex"`, resolve));
       fs.unlinkSync('output/' + data.fileName + '.log');
       fs.unlinkSync('output/' + data.fileName + '.aux');
+      fs.unlinkSync('output/' + data.fileName + '.toc');
+      fs.unlinkSync('output/' + data.fileName + '.out');
       resolve();
     });
   });
