@@ -71,8 +71,9 @@ function getTexStructure(data) {
 
   // TODO: add an option to disable drop caps
   // cSpell:disable
-  return `\\documentclass[10pt,twoside]{extarticle}
+  return `\\documentclass[10pt,twoside]{article}
 
+\\usepackage{emptypage}
 \\usepackage[protrusion]{microtype} % micro typography - protrusions
 \\usepackage[${$languages[data.language]}]{babel} % for hyphenation, I think
 \\usepackage[all,defaultlines=2]{nowidow} % deal with widows and orphans
@@ -115,7 +116,7 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 
 % begin each section on a new page
 ${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage\\vspace*{2em}}` : ''}
-${style === 'print' ? `\\newcommand\\sectionbreak{\\clearpage\\begingroup\\pagestyle{empty}\\cleardoublepage\\endgroup\\vspace*{2em}}` : ''}
+${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em}}` : ''}
 
 % table of contents
 \\usepackage[hidelinks]{hyperref}
@@ -205,6 +206,13 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 \\maketitle
 
 ${content}
+
+${style === 'print' ? `
+\\newpage
+\\thispagestyle{empty}
+\\mbox{}
+\\newpage
+` : ''}
 
 \\tableofcontents
 
