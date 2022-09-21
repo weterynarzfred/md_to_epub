@@ -78,8 +78,12 @@ function getTexStructure(data) {
 \\usepackage[${$languages[data.language]}]{babel} % for hyphenation, I think
 \\usepackage[all,defaultlines=2]{nowidow} % deal with widows and orphans
 \\usepackage{needspace}
-\\usepackage{lettrine}
 \\usepackage{pgfornament}
+
+% drop caps
+\\usepackage{lettrine}
+\\usepackage{textcase}
+\\renewcommand{\\LettrineTextFont}{\\footnotesize\\MakeTextUppercase}
 
 ${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] + bidingOffset / 2}cm, right=${margins[1] + bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
 ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
@@ -112,7 +116,7 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 % styling titles
 \\usepackage{titlesec}
 \\titleformat{\\section}[block]{\\huge\\bfseries\\filcenter}{\\small\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
-\\titlespacing*{\\section}{0pt}{0pt}{3.77em}
+\\titlespacing*{\\section}{0pt}{-0.32em}{2\\baselineskip}
 
 % begin each section on a new page
 ${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage\\vspace*{2em}}` : ''}
@@ -179,7 +183,6 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
   \\noindent\\ignorespaces
 }
 
-\\usepackage{lmodern}
 \\newcount\\zzc
 \\makeatletter
 \\def\\zz{%

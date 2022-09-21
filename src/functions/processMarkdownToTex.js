@@ -21,7 +21,7 @@ function processMarkdownToTex(data) {
   data.markdownTex = data.markdownTex
     .replaceAll(
       /(# .*?\n(\n|<div class="pov">.*?<\/div>)*)(\*)?(— |"|„)?([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ])([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ,.?!;:]*)(.*?)\n/g,
-      '$1\\lettrine[lines=3, lhang=0, nindent=0.5em, findent=0em, realheight=true]{$5}{$6}$3$7\n\\zz\n'
+      '$1\\lettrine[lines=3, lhang=0, nindent=0.5em, findent=0em, realheight=true, grid=true]{$5}{$6}$3$7\n\\zz\n'
     );
 
   data.markdownTex = data.markdownTex
