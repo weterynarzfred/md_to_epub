@@ -128,7 +128,7 @@ ${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em
 \\contentsmargin{0em}
 \\renewcommand\\contentspage{\\hspace{.2em}\\thecontentspage}
 \\renewcommand\\contentslabel{}
-\\dottedcontents{section}[0em]{}{}{0.5em}
+\\titlecontents{section}[0em]{}{}{}{\\hspace{0.2em}\\titlerule*[0.5em]{.}\\contentspage}
 
 % paragraphs
 \\usepackage{parskip}
