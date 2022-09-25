@@ -80,11 +80,6 @@ function getTexStructure(data) {
 \\usepackage{needspace}
 \\usepackage{pgfornament}
 
-% drop caps
-\\usepackage{lettrine}
-\\usepackage{textcase}
-\\renewcommand{\\LettrineTextFont}{\\footnotesize\\MakeTextUppercase}
-
 ${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] + bidingOffset / 2}cm, right=${margins[1] + bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
 ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
 
@@ -115,12 +110,12 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 
 % styling titles
 \\usepackage{titlesec}
-\\titleformat{\\section}[block]{\\huge\\bfseries\\filcenter}{\\small\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
-\\titlespacing*{\\section}{0pt}{-0.32em}{2\\baselineskip}
+\\titleformat{\\section}[block]{\\vspace*{2\\baselineskip}\\huge\\bfseries\\filcenter}{\\small\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
+\\titlespacing*{\\section}{0pt}{0pt}{2\\baselineskip}
 
 % begin each section on a new page
-${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage\\vspace*{2em}}` : ''}
-${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em}}` : ''}
+${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage}` : ''}
+${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage}` : ''}
 
 % table of contents
 \\usepackage[hidelinks]{hyperref}
@@ -134,6 +129,12 @@ ${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage\\vspace*{2em
 \\usepackage{parskip}
 \\setlength{\\parskip}{0pt} % paragraph spacing
 \\setlength{\\parindent}{1.5em} % indentation
+\\setlength{\\lineskiplimit}{-1em} % this somehow makes section titles height to be an integer multiple of baselineskip
+
+% drop caps
+\\usepackage{lettrine}
+\\usepackage{textcase}
+\\renewcommand{\\LettrineTextFont}{\\footnotesize\\MakeTextUppercase}
 
 % line height
 \\linespread{1.15}
