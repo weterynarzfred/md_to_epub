@@ -3,11 +3,11 @@
 const fs = require('fs');
 const JSZip = require('jszip');
 
-const { SETTINGS } = require('../constants');
+const { SETTINGS, SOURCE_PATH } = require('../constants');
 const sanitizeFilename = require('./sanitizeFilename');
 
 function makeEpub(data) {
-  const { getHtmlStructure, getContentOpf } = require('./contentWrappers');
+  const { getHtmlStructure, getContentOpf, getEpubTitlePage } = require('./contentWrappers');
 
   return new Promise(resolve => {
     data.author = data.author.length === 0 ? [SETTINGS.author] : data.author;
@@ -24,8 +24,12 @@ function makeEpub(data) {
     zipOebps.file('content.opf', getContentOpf(data));
     zipOebps.folder('Styles')
       .file('style.css', fs.readFileSync('./src/epub_parts/style.css'));
-    zipOebps.folder('Text')
-      .file('text.xhtml', getHtmlStructure(data));
+    zipText = zipOebps.folder('Text');
+    if (data.cover !== undefined) {
+      zipText.file('titlepage.xhtml', getEpubTitlePage(data));
+      zipOebps.file(data.cover, fs.readFileSync(SOURCE_PATH + data.cover));
+    }
+    zipText.file('text.xhtml', getHtmlStructure(data));
 
     data.fileName = (data.isStoryGroup ? '_' : '') + sanitizeFilename(data.title);
     zip

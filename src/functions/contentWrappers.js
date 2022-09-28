@@ -21,10 +21,13 @@ function getContentOpf(data) {
     <dc:identifier id="md_hash" opf:scheme="md_hash">${hash}</dc:identifier>
     </metadata>
   <manifest>
+    ${data.cover === undefined ? '' : '<item id="titlepage.xhtml" href="Text/titlepage.xhtml" media-type="application/xhtml+xml"/>'}
     <item id="text.xhtml" href="Text/text.xhtml" media-type="application/xhtml+xml"/>
     <item id="style.css" href="Styles/style.css" media-type="text/css"/>
+    ${data.cover === undefined ? '' : `<item id="cover" href="${data.cover}" media-type="image/jpeg"/>`}
   </manifest>
   <spine>
+    ${data.cover === undefined ? '' : '<itemref idref="titlepage.xhtml"/>'}
     <itemref idref="text.xhtml"/>
   </spine>
 </package>`;
@@ -51,6 +54,31 @@ function getHtmlStructure(data) {
   </body>
 </html>
 `;
+}
+
+function getEpubTitlePage(data) {
+  if (data.cover === undefined) return;
+
+  return `<?xml version='1.0' encoding='utf-8'?>
+  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+      <head>
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+          <meta name="calibre:cover" content="true"/>
+          <title>Cover</title>
+          <style type="text/css" title="override_css">
+              @page {padding: 0pt; margin:0pt}
+              body { text-align: center; padding:0pt; margin: 0pt; }
+          </style>
+      </head>
+      <body>
+          <div>
+              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 1480 2100" preserveAspectRatio="xMidYMid meet">
+                  <image width="1480" height="2100" xlink:href="../${data.cover}"/>
+              </svg>
+          </div>
+      </body>
+  </html>
+  `;
 }
 
 function getTexStructure(data) {
@@ -231,4 +259,4 @@ ${style === 'print' ? `
   // cSpell:enable
 }
 
-module.exports = { getContentOpf, getHtmlStructure, getTexStructure };
+module.exports = { getContentOpf, getHtmlStructure, getEpubTitlePage, getTexStructure };
