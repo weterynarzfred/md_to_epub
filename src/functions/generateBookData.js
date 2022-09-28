@@ -26,6 +26,9 @@ function generateBookData(markdownFiles) {
         !bookData[title].publisher.includes(data.params.publisher)
       )
         bookData[title].publisher.push(data.params.publisher);
+      if (![undefined, ''].includes(data.params?.cover))
+        bookData[title].cover = data.params.cover;
+
       bookData[title].sections.push(data);
     }
   }

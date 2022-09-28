@@ -52,9 +52,9 @@ function processMarkdownToTex(data) {
   data.markdownTex = data.markdownTex
     .replaceAll(/^# (.*)/gm, '\\section{$1}')
     .replaceAll(/^## (.*)/gm, '\\subsection{$1}')
-    .replaceAll(/^### (.*)/gm, '\\subsubsection{$1}')
+    .replaceAll(/^###+ (.*)/gm, '\\subsubsection{$1}')
     .replaceAll(/—/g, '\\mbox{---}') // change em dashes to latex
-    .replaceAll(/([_\^])/g, '\\$1'); // escape some characters
+    .replaceAll(/([_\^#])/g, '\\$1'); // escape some characters
 
   data.markdownTex = data.markdownTex
     .replaceAll(/\*(.*?)\*/g, '\\emph{$1}');

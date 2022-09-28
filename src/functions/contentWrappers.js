@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { SOURCE_PATH } = require('../constants');
 const processMarkdownToTex = require('./processMarkdownToTex');
 
 function getContentOpf(data) {
@@ -64,14 +65,14 @@ function getTexStructure(data) {
     content += section.markdownTex;
   }
 
-  // const style = 'print';
-  const style = 'screen';
+  const style = 'print';
+  // const style = 'screen';
   const margins = [1.6, 1.6, 1.6, 1.6];
   const bidingOffset = 0.6;
 
   // TODO: add an option to disable drop caps
   // cSpell:disable
-  return `\\documentclass[10pt,twoside]{article}
+  return `\\documentclass[10pt, twoside, hidelinks]{article}
 
 \\usepackage{emptypage}
 \\usepackage[protrusion]{microtype} % micro typography - protrusions
@@ -79,6 +80,7 @@ function getTexStructure(data) {
 \\usepackage[all,defaultlines=2]{nowidow} % deal with widows and orphans
 \\usepackage{needspace}
 \\usepackage{pgfornament}
+\\usepackage{incgraph}
 
 ${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] + bidingOffset / 2}cm, right=${margins[1] + bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
 ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
@@ -110,16 +112,21 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 \\titlespacing*{\\section}{0pt}{0pt}{2.37\\baselineskip}
 
 % begin each section on a new page
-${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage}` : ''}
-${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage}` : ''}
+${style === 'screen' ? `\\newcommand*{\\OrgSection}{}
+\\let\\OrgSection\\section
+\\renewcommand*{\\section}{\\clearpage\\OrgSection}` : ''}
+${style === 'print' ? `\\newcommand*{\\OrgSection}{}
+\\let\\OrgSection\\section
+\\renewcommand*{\\section}{\\cleardoublepage\\OrgSection}` : ''}
 
 % table of contents
-\\usepackage[hidelinks]{hyperref}
 \\usepackage{titletoc}
 \\contentsmargin{0em}
 \\renewcommand\\contentspage{\\hspace{.2em}\\thecontentspage}
 \\renewcommand\\contentslabel{}
 \\titlecontents{section}[0em]{}{}{}{\\hspace{0.2em}\\titlerule*[0.5em]{.}\\contentspage}
+\\titlecontents{subsection}[1em]{}{}{}{\\hspace{0.2em}\\titlerule*[0.5em]{.}\\contentspage}
+\\titlecontents{subsubsection}[2em]{}{}{}{\\hspace{0.2em}\\titlerule*[0.5em]{.}\\contentspage}
 \\addto{\\captionspolish}{\\renewcommand*{\\contentsname}{\\vspace*{-2.25\\baselineskip} \\\\ Spis Treści \\vspace*{-0.5\\baselineskip}}}
 
 % paragraphs
@@ -204,7 +211,8 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 \\date{}
 
 \\begin{document}
-\\maketitle
+
+${data.cover === undefined ? '' : `\\incgraph{${SOURCE_PATH}${data.cover}}`}
 
 ${content}
 
@@ -215,6 +223,8 @@ ${style === 'print' ? `
 \\newpage
 ` : ''}
 
+\\clearpage
+\\pdfbookmark{Spis Treści}{toc}
 \\tableofcontents
 
 \\end{document}`;
