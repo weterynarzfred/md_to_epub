@@ -1,7 +1,6 @@
 const { SETTINGS } = require('../constants');
 
 function processMarkdownToTex(data) {
-  // data.markdownTex = data.raw.replaceAll(/[^a-zA-Z0-9 ]/g, '');
   data.markdownTex = data.raw;
 
   if (SETTINGS.stripCodeBlocks) {
@@ -17,11 +16,11 @@ function processMarkdownToTex(data) {
     }
   }
 
-  // cSpell:ignore ęóąśłżźćńĘÓĄŚŁŻŹĆŃ lettrine lraise lhang nindent findent realheight
+  // cSpell:ignore ęóąśłżźćńĘÓĄŚŁŻŹĆŃ lettrine lraise lhang nindent findent realheight novskip loversize
   data.markdownTex = data.markdownTex
     .replaceAll(
       /(# .*?\n(\n|<div class="pov">.*?<\/div>)*)(\*)?(— |"|„)?([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ])([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ,.?!;:]*)(.*?)\n/g,
-      (_match, m1, _m2, m3, _m4, m5, m6, m7) => `${m1}\\lettrine[lines=3, lraise=${m5 === 'J' ? 0.25 : 0}, lhang=0, nindent=${['L'].includes(m5) ? 1.5 : 0.5}em, findent=${['W', 'T'].includes(m5) ? 0.2 : (['L'].includes(m5) ? -0.9 : 0.1)}em, realheight=true, grid=true]{${m5}}{${m6}}${m3 === undefined ? '' : m3}${m7}\n\\zz\n`
+      (_match, m1, _m2, m3, _m4, m5, m6, m7) => `${m1}\\lettrine[lines=3, lraise=0, lhang=0, nindent=${['L'].includes(m5) ? 1.5 : 0.5}em, findent=${['W', 'T'].includes(m5) ? 0.2 : (['L'].includes(m5) ? -0.9 : 0.1)}em, realheight=true, grid=true, loversize=0, depth=${['J', 'Q'].includes(m5) ? 1 : 0}]{${m5}}{${m6}}${m3 === undefined ? '' : m3}${m7}\n\\zz\n`
     );
 
   data.markdownTex = data.markdownTex

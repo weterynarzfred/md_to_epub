@@ -17,10 +17,10 @@ function makePdf(data) {
     exec(`xelatex --output-directory=output "output/${data.fileName}.tex"`, async (error, _stdout, _stderr) => {
       if (error) console.error(data.title + '.pdf failed');
       await new Promise(resolve => exec(`xelatex --output-directory=output "output/${data.fileName}.tex"`, resolve));
-      fs.unlinkSync('output/' + data.fileName + '.log');
-      fs.unlinkSync('output/' + data.fileName + '.aux');
-      fs.unlinkSync('output/' + data.fileName + '.toc');
-      fs.unlinkSync('output/' + data.fileName + '.out');
+      try { fs.unlinkSync('output/' + data.fileName + '.log'); } catch (e) { }
+      try { fs.unlinkSync('output/' + data.fileName + '.aux'); } catch (e) { }
+      try { fs.unlinkSync('output/' + data.fileName + '.toc'); } catch (e) { }
+      try { fs.unlinkSync('output/' + data.fileName + '.out'); } catch (e) { }
       resolve();
     });
   });

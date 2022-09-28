@@ -66,7 +66,7 @@ function getTexStructure(data) {
 
   // const style = 'print';
   const style = 'screen';
-  const margins = [1.4, 1.6, 1.9, 1.6];
+  const margins = [1.6, 1.6, 1.6, 1.6];
   const bidingOffset = 0.6;
 
   // TODO: add an option to disable drop caps
@@ -84,12 +84,11 @@ ${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=${
 ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
 
 % hyphenation settings - https://tug.org/utilities/plain/cseq.html
-\\doublehyphendemerits=100000
-\\finalhyphendemerits=100000
+\\doublehyphendemerits=900000
+\\finalhyphendemerits=900000
 \\pretolerance=-1
 \\tolerance=400
 \\setlength{\\emergencystretch}{2em}
-\\brokenpenalty=10000 % prevent breaking pages on hyphenation
 
 % set fonts
 \\usepackage{fontspec}
@@ -100,18 +99,15 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 \\newfontfamily\\fallbackfont{CMU Serif Roman}
 \\newunicodechar{ }{{\\fallbackfont\\symbol{"2004}}}
 
-% I have no idea, but it hides some warnings
-\\makeatletter
-  \\edef\\orig@output{\\the\\output}
-  \\output{\\setbox\\@cclv\\vbox{\\unvbox\\@cclv\\vspace{-20pt plus 40pt}}\\orig@output}
-\\makeatother
+% hide some warnings
+\\raggedbottom
 \\hbadness=3000
 \\hfuzz=2pt
 
 % styling titles
 \\usepackage{titlesec}
-\\titleformat{\\section}[block]{\\vspace*{2\\baselineskip}\\huge\\bfseries\\filcenter}{\\small\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
-\\titlespacing*{\\section}{0pt}{0pt}{2\\baselineskip}
+\\titleformat{\\section}[block]{\\vspace*{2\\baselineskip}\\LARGE\\bfseries\\filcenter}{\\footnotesize\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
+\\titlespacing*{\\section}{0pt}{0pt}{2.37\\baselineskip}
 
 % begin each section on a new page
 ${style === 'screen' ? `\\newcommand\\sectionbreak{\\clearpage}` : ''}
@@ -124,12 +120,13 @@ ${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage}` : ''}
 \\renewcommand\\contentspage{\\hspace{.2em}\\thecontentspage}
 \\renewcommand\\contentslabel{}
 \\titlecontents{section}[0em]{}{}{}{\\hspace{0.2em}\\titlerule*[0.5em]{.}\\contentspage}
+\\addto{\\captionspolish}{\\renewcommand*{\\contentsname}{\\vspace*{-2.25\\baselineskip} \\\\ Spis Treści \\vspace*{-0.5\\baselineskip}}}
 
 % paragraphs
 \\usepackage{parskip}
 \\setlength{\\parskip}{0pt} % paragraph spacing
 \\setlength{\\parindent}{1.5em} % indentation
-\\setlength{\\lineskiplimit}{-1em} % this somehow makes section titles height to be an integer multiple of baselineskip
+\\setlength{\\lineskiplimit}{-1em} % this somehow helps make section titles height to be an integer multiple of baselineskip
 
 % drop caps
 \\usepackage{lettrine}
@@ -140,7 +137,7 @@ ${style === 'print' ? `\\newcommand\\sectionbreak{\\cleardoublepage}` : ''}
 \\linespread{1.15}
 
 % change page numbering style
-\\setlength{\\headheight}{15pt}
+\\setlength{\\headheight}{0pt}
 \\usepackage{fancyhdr}
 \\fancypagestyle{fancy}{
   \\fancyhf{}
