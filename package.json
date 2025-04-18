@@ -28,7 +28,8 @@
     "hyphen": "^1.6.4",
     "markdown-it": "^13.0.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "smartquotes": "^2.3.2"
   },
   "devDependencies": {
     "cli-progress": "^3.11.2",

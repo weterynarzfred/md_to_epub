@@ -106,7 +106,8 @@ function getTexStructure(data) {
 
   // TODO: add an option to disable drop caps
   // cSpell:disable
-  return `\\documentclass[10pt, twoside, hidelinks]{article}
+  return `% chktex-file 1
+\\documentclass[10pt, twoside, hidelinks]{article}
 
 \\usepackage{emptypage}
 \\usepackage[protrusion]{microtype} % micro typography - protrusions
@@ -133,7 +134,7 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 % substitute missing three per em space
 \\usepackage{newunicodechar}
 \\newfontfamily\\fallbackfont{CMU Serif Roman}
-\\newunicodechar{ }{{\\fallbackfont\\symbol{"2004}}}
+\\newunicodechar{ }{{\\fallbackfont\\symbol{"2004}}} % chktex 18
 
 % hide some warnings
 \\raggedbottom
