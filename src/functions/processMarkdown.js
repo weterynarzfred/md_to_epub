@@ -8,7 +8,7 @@ const MarkdownIt = require('markdown-it'),
 
 function separateParams(inputMarkdown) {
   const params = {};
-  const markdown = inputMarkdown
+  let markdown = inputMarkdown
     .replaceAll(/^> *(.*)$\n/gm, (_match, group_1) => {
       if (group_1?.[0] === '#') {
         params['tag'] = group_1.slice(1).replace(/ +$/, '');
@@ -22,6 +22,16 @@ function separateParams(inputMarkdown) {
       }
       return '';
     });
+
+  markdown = markdown.replace(/^\s*---(.+)---/s, (_match, group_1) => {
+    const matches = group_1.match(/^.+:\s*(.+)$/gm);
+    matches.forEach(match => {
+      const [key, value] = match.split(/:\s*/);
+      params[key] = value;
+    });
+
+    return '';
+  });
 
   return {
     markdown,
@@ -63,7 +73,15 @@ function preprocessMarkdown(data) {
   }
 
   if (SETTINGS.hyphenate) {
-    const lang = [undefined, ''].includes(data.params?.language) ? SETTINGS.language : data.params.language;
+    const languages = {
+      pl: 'pl',
+      en: 'en',
+      polish: 'pl',
+      english: 'en',
+      Polish: 'pl',
+      English: 'en',
+    };
+    const lang = [undefined, ''].includes(data.params?.language) ? SETTINGS.language : languages[data.params.language];
     try {
       const hyphen = require(`hyphen/${lang}`);
       data.markdown = hyphen.hyphenateHTMLSync(data.markdown);

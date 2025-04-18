@@ -17,11 +17,13 @@ function processMarkdownToTex(data) {
   }
 
   // cSpell:ignore ęóąśłżźćńĘÓĄŚŁŻŹĆŃ lettrine lraise lhang nindent findent realheight novskip loversize
-  data.markdownTex = data.markdownTex
-    .replaceAll(
-      /(# .*?\n(\n|<div class="pov">.*?<\/div>)*)(\*)?(— |"|„)?([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ])([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ,.?!;:]*)(.*?)\n/g,
-      (_match, m1, _m2, m3, _m4, m5, m6, m7) => `${m1}\\lettrine[lines=3, lraise=0, lhang=0, nindent=${['L'].includes(m5) ? 1.5 : 0.5}em, findent=${['W', 'T'].includes(m5) ? 0.2 : (['L'].includes(m5) ? -0.9 : 0.1)}em, realheight=true, grid=true, loversize=0, depth=${['J', 'Q'].includes(m5) ? 1 : 0}]{${m5}}{${m6}}${m3 === undefined ? '' : m3}${m7}\n\\zz\n`
-    );
+  if (SETTINGS.useDropCaps) {
+    data.markdownTex = data.markdownTex
+      .replaceAll(
+        /(# .*?\n(\n|<div class="pov">.*?<\/div>)*)(\*)?(— |"|„)?([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ])([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ,.?!;:]*)(.*?)\n/g,
+        (_match, m1, _m2, m3, _m4, m5, m6, m7) => `${m1}\\lettrine[lines=3, lraise=0, lhang=0, nindent=${['L'].includes(m5) ? 1.5 : 0.5}em, findent=${['W', 'T'].includes(m5) ? 0.2 : (['L'].includes(m5) ? -0.9 : 0.1)}em, realheight=true, grid=true, loversize=0, depth=${['J', 'Q'].includes(m5) ? 1 : 0}]{${m5}}{${m6}}${m3 === undefined ? '' : m3}${m7}\n\\zz\n`
+      );
+  }
 
   data.markdownTex = data.markdownTex
     .replaceAll(/^— /gm, '— ') // change spaces after em-dashes to constant width
@@ -54,7 +56,7 @@ function processMarkdownToTex(data) {
     .replaceAll(/^## (.*)/gm, '\\subsection{$1}')
     .replaceAll(/^###+ (.*)/gm, '\\subsubsection{$1}')
     .replaceAll(/—/g, '\\mbox{---}') // change em dashes to latex
-    .replaceAll(/([_\^#])/g, '\\$1'); // escape some characters
+    .replaceAll(/([^\\])([_\^#])/g, '$1\\$2'); // escape some characters
 
   data.markdownTex = data.markdownTex
     .replaceAll(/\*(.*?)\*/g, '\\emph{$1}');

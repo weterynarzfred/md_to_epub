@@ -82,9 +82,13 @@ function getEpubTitlePage(data) {
 }
 
 function getTexStructure(data) {
-  $languages = {
+  const languages = {
     pl: 'polish',
     en: 'english',
+    polish: 'polish',
+    english: 'english',
+    Polish: 'polish',
+    English: 'english',
   };
 
   let content = '';
@@ -93,10 +97,12 @@ function getTexStructure(data) {
     content += section.markdownTex;
   }
 
-  const style = 'print';
-  // const style = 'screen';
+  // const style = 'print';
+  const style = 'screen';
   const margins = [1.6, 1.6, 1.6, 1.6];
   const bidingOffset = 0.6;
+  const useToc = false;
+  const useChapterNumbers = false;
 
   // TODO: add an option to disable drop caps
   // cSpell:disable
@@ -104,7 +110,7 @@ function getTexStructure(data) {
 
 \\usepackage{emptypage}
 \\usepackage[protrusion]{microtype} % micro typography - protrusions
-\\usepackage[${$languages[data.language]}]{babel} % for hyphenation, I think
+\\usepackage[${languages[data.language]}]{babel} % for hyphenation, I think
 \\usepackage[all,defaultlines=2]{nowidow} % deal with widows and orphans
 \\usepackage{needspace}
 \\usepackage{pgfornament}
@@ -136,7 +142,11 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 
 % styling titles
 \\usepackage{titlesec}
+${useChapterNumbers ? `
 \\titleformat{\\section}[block]{\\vspace*{2\\baselineskip}\\LARGE\\bfseries\\filcenter}{\\footnotesize\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
+` : `
+\\titleformat{\\section}[block]{\\vspace*{\\baselineskip}\\LARGE\\bfseries\\filcenter}{\\footnotesize\\\\}{0pt}{}
+`}
 \\titlespacing*{\\section}{0pt}{0pt}{2.37\\baselineskip}
 
 % begin each section on a new page
@@ -251,9 +261,11 @@ ${style === 'print' ? `
 \\newpage
 ` : ''}
 
+${useToc ? `
 \\clearpage
 \\pdfbookmark{Spis Treści}{toc}
 \\tableofcontents
+` : ''}
 
 \\end{document}`;
   // cSpell:enable

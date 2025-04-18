@@ -14,7 +14,7 @@ function makeEpub(data) {
     data.publisher = data.publisher.length === 0 ? [SETTINGS.publisher] : data.publisher;
     data.language = data.language ?? SETTINGS.language;
 
-    zip = new JSZip();
+    const zip = new JSZip();
     zip.file('mimetype', 'application/epub+zip');
 
     const zipMeta = zip.folder('META-INF');
