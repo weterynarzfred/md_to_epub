@@ -1,3 +1,5 @@
+const smartquotes = require('smartquotes');
+
 const { SETTINGS } = require('../constants');
 
 const MarkdownIt = require('markdown-it'),
@@ -41,6 +43,7 @@ function separateParams(inputMarkdown) {
 
 function preprocessMarkdown(data) {
   data.raw = data.markdown;
+
   if (SETTINGS.stripCodeBlocks) {
     if (Array.isArray(SETTINGS.stripCodeBlocks)) {
       const regexp = new RegExp(
@@ -54,7 +57,19 @@ function preprocessMarkdown(data) {
     }
   }
 
-  data.markdown = data.markdown
+  if (SETTINGS.stripComments)
+    data.markdown = data.markdown.replaceAll(/%%(.*?[^\/])%%/g, "");
+
+  if (![undefined, ''].includes(data.params?.story)) {
+    data.markdown = data.markdown
+      .replaceAll(/^# /gm, '## '); // increase first heading depth to allow the insertion of a story title
+  }
+
+  data.markdown = smartquotes(data.markdown);
+
+  data.html = data.markdown;
+
+  data.html = data.html
     .replaceAll(/^— /gm, '—&#x2004;') // change spaces after em-dashes to constant width
     .replaceAll(/(?<= )([a-zA-Z—–\-]) /g, "$1&nbsp;") // deal with orphans
     .replaceAll(
@@ -62,15 +77,10 @@ function preprocessMarkdown(data) {
       SETTINGS.stripComments ? "" : "<span class=\"comment\">$1</span>"
     ); // mark comments
 
-  if (SETTINGS.addEmptyLines) {
-    data.markdown = data.markdown
+  if (SETTINGS.addEmptyLines)
+    data.html = data.html
       .replaceAll(/$\n/gm, '\n\n');
-  }
 
-  if (![undefined, ''].includes(data.params?.story)) {
-    data.markdown = data.markdown
-      .replaceAll(/^# /gm, '## '); // increase first heading depth
-  }
 
   if (SETTINGS.hyphenate) {
     const languages = {
@@ -84,14 +94,15 @@ function preprocessMarkdown(data) {
     const lang = [undefined, ''].includes(data.params?.language) ? SETTINGS.language : languages[data.params.language];
     try {
       const hyphen = require(`hyphen/${lang}`);
-      data.markdown = hyphen.hyphenateHTMLSync(data.markdown);
+      data.html = hyphen.hyphenateHTMLSync(data.html);
     } catch (e) {
       console.error(`error with hyphenation, language: ${lang}`);
     }
   }
 
   if (SETTINGS.replaceSeparators) {
-    data.markdown = data.markdown
+    data.markdown = data.markdown.replaceAll(/(---|___)/g, "***");
+    data.html = data.html
       .replaceAll(/(\*\*\*|---|___)\n+([^\n]*)/g, (_match, _g1, g2) => `
 <div class="no-page-break">
   <div class="separator">
@@ -102,7 +113,7 @@ function preprocessMarkdown(data) {
   `);
   }
 
-  data.markdown = data.markdown
+  data.html = data.html
     .replaceAll(/(<div class="pov">.*?<\/div>)\n+([^\n]*)/g, (_match, g1, g2) => `
 <div class="no-page-break">
   ${g1}
@@ -110,7 +121,7 @@ function preprocessMarkdown(data) {
 </div>
   `);
 
-  return data.markdown;
+  data.html = md.render(data.html);
 }
 
 function processMarkdown(inputMarkdown, fileName) {
@@ -118,7 +129,7 @@ function processMarkdown(inputMarkdown, fileName) {
     separateParams(inputMarkdown) :
     { markdown: inputMarkdown, props: {} };
   if (SETTINGS.filter !== undefined && !SETTINGS.filter(data.params, fileName)) return false;
-  data.html = md.render(preprocessMarkdown(data));
+  preprocessMarkdown(data);
   data.title = fileName.replace(/\.md$/, '');
 
   return data;

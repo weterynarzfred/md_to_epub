@@ -6,11 +6,12 @@ const SETTINGS = {
   language: 'en', // when using with xelatex only polish and english are working for now
   convertToPdf: true, // uses xelatex
   filter: (params, fileName) => {
-    // params?.tag === 'prose' &&
-    // params?.skip !== 'true' &&
-    // params?.order !== '"000"',
-    //   fileName === 'Nyxia\'s pride.md',
+    // return params?.tag === 'prose' &&
+    //   params?.skip !== 'true' &&
+    //   params?.order !== '"000"';
+    // fileName === 'Nyxia\'s pride.md',
     return params?.story === 'The Hermit Queen of Kaos and Stars';
+    // return true;
   },
   parseGtAsProps: true,
   addEmptyLines: true,
