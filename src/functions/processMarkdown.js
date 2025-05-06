@@ -65,7 +65,8 @@ function preprocessMarkdown(data) {
       .replaceAll(/^# /gm, '## '); // increase first heading depth to allow the insertion of a story title
   }
 
-  data.markdown = smartquotes(data.markdown);
+  data.markdown = data.markdown.replaceAll(/\.\.\./g, '…'); // change three dots to an ellipsis character;
+  data.markdown = smartquotes(data.markdown); // convert to smart quotes
 
   data.html = data.markdown;
 
