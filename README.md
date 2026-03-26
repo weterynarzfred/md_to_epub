@@ -12,7 +12,7 @@ By default the script loads files from the `./content` folder. You can change th
 
 - `start` - displays the combined preview at http://localhost:3000/
 - `build` - creates a (very unoptimized) html file.
-- `make_epub` - creates epub files in the `output` folder.
+- `make_books` - creates epub files in the `output` folder.
 
 ## settings
 Settings are located in `./src/constants.js`.

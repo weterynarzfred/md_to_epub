@@ -7,7 +7,7 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
-    "make_books": "node ./src/make_epub.js"
+    "make_books": "node ./src/make_books.js"
   },
   "keywords": [],
   "author": "",
