@@ -4,25 +4,44 @@ const fs = require('fs');
 const { SETTINGS } = require('../constants');
 const sanitizeFilename = require('./sanitizeFilename');
 
+function runXeLatex(texPath) {
+  return new Promise((resolve, reject) => {
+    exec(`xelatex --output-directory=output "${texPath}"`, (error, _stdout, stderr) => {
+      if (error) {
+        const err = new Error(`xelatex failed for ${texPath}`);
+        err.cause = error;
+        err.stderr = stderr;
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
 function makePdf(data) {
   const { getTexStructure } = require('./contentWrappers');
 
-  return new Promise(resolve => {
+  return new Promise(async (resolve, reject) => {
     data.author = data.author.length === 0 ? [SETTINGS.author] : data.author;
     data.publisher = data.publisher.length === 0 ? [SETTINGS.publisher] : data.publisher;
     data.language = data.language ?? SETTINGS.language;
     data.fileName = (data.isStoryGroup ? '_' : '') + sanitizeFilename(data.title);
 
-    fs.writeFileSync('output/' + data.fileName + '.tex', getTexStructure(data));
-    exec(`xelatex --output-directory=output "output/${data.fileName}.tex"`, async (error, _stdout, _stderr) => {
-      if (error) console.error(data.title + '.pdf failed');
-      await new Promise(resolve => exec(`xelatex --output-directory=output "output/${data.fileName}.tex"`, resolve));
+    const texPath = `output/${data.fileName}.tex`;
+
+    try {
+      fs.writeFileSync(texPath, getTexStructure(data));
+      await runXeLatex(texPath);
+      await runXeLatex(texPath);
       try { fs.unlinkSync('output/' + data.fileName + '.log'); } catch (e) { }
       try { fs.unlinkSync('output/' + data.fileName + '.aux'); } catch (e) { }
       try { fs.unlinkSync('output/' + data.fileName + '.toc'); } catch (e) { }
       try { fs.unlinkSync('output/' + data.fileName + '.out'); } catch (e) { }
       resolve();
-    });
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 

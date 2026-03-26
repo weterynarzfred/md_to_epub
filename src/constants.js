@@ -1,5 +1,6 @@
 // const SOURCE_PATH = "./content/";
-const SOURCE_PATH = "H:/proton/My files/obsidian/pisanie_2/";
+// const SOURCE_PATH = "H:/proton/My files/obsidian/pisanie_2/";
+const SOURCE_PATH = "H:/proton/My files/obsidian/diary/";
 const SETTINGS = {
   author: 'Weterynarzfred',
   publisher: 'Weterynarzfred Publishing House',
@@ -9,8 +10,8 @@ const SETTINGS = {
     // return params?.tag === 'prose' &&
     //   params?.skip !== 'true' &&
     //   params?.order !== '"000"';
-    // fileName === 'Nyxia\'s pride.md',
-    return params?.story === 'The Hermit Queen of Kaos and Stars';
+    return fileName === 'diary.md';
+    // return params?.story === 'The Hermit Queen of Kaos and Stars';
     // return true;
   },
   parseGtAsProps: true,

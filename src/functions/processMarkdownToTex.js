@@ -5,28 +5,34 @@ const { SETTINGS } = require('../constants');
 function escapeLaTeX(str) {
   return str
     .replace(/\\/g, '\\textbackslash{}')
-    .replace(/_/g, '\\_')
     .replace(/{/g, '\\{')
     .replace(/}/g, '\\}')
+    .replace(/textbackslash\\{\\}/g, 'textbackslash{}')
     .replace(/\$/g, '\\$')
-    .replace(/#/g, '\\#')
+    .replace(/_/g, '\\_')
+    .replace(/#([^ #])/g, '\\#$1')
     .replace(/&/g, '\\&')
     .replace(/%/g, '\\%');
 }
 
 function tokenizeMarkdown(md) {
   const tokens = [];
-  const codeBlockRegex = /```([\s\S]*?)```/g;
+  const codeBlockRegex = /(^|\r?\n)```([^\n\r`]*)[ \t]*\r?\n([\s\S]*?)\r?\n```(?=\r?\n|$)/g;
   let lastIndex = 0;
 
   for (const match of md.matchAll(codeBlockRegex)) {
-    const start = match.index;
-    const end = start + match[0].length;
+    const prefix = match[1] ?? '';
+    const start = match.index + prefix.length;
+    const end = start + match[0].length - prefix.length;
 
     if (lastIndex < start)
       tokens.push({ type: 'text', content: md.slice(lastIndex, start) });
 
-    tokens.push({ type: 'codeBlock', content: match[1] });
+    tokens.push({
+      type: 'codeBlock',
+      language: match[2].trim().toLowerCase(),
+      content: match[3],
+    });
     lastIndex = end;
   }
 
@@ -46,6 +52,76 @@ function tokenizeMarkdown(md) {
   });
 }
 
+function mapMarkdownLanguageToListings(language) {
+  if (!language) return '';
+
+  const aliases = {
+    js: 'JavaScript',
+    javascript: 'JavaScript',
+    mjs: 'JavaScript',
+    cjs: 'JavaScript',
+    jsx: 'JavaScript',
+    ts: 'JavaScript',
+    tsx: 'JavaScript',
+    html: 'HTML',
+    xml: 'XML',
+    css: 'CSS',
+    scss: 'CSS',
+    sass: 'CSS',
+    py: 'Python',
+    python: 'Python',
+    c: 'C',
+    cpp: 'C++',
+    'c++': 'C++',
+    java: 'Java',
+    sql: 'SQL',
+    sh: 'bash',
+    bash: 'bash',
+    zsh: 'bash',
+    ps1: 'bash',
+    powershell: 'bash',
+    php: 'PHP',
+    rb: 'Ruby',
+    ruby: 'Ruby',
+    tex: 'TeX',
+    latex: 'TeX',
+  };
+
+  const supported = new Set([
+    'JavaScript',
+    'HTML',
+    'XML',
+    'CSS',
+    'Python',
+    'C',
+    'C++',
+    'Java',
+    'SQL',
+    'bash',
+    'PHP',
+    'Ruby',
+    'TeX',
+  ]);
+
+  const mapped = aliases[language] ?? '';
+  return supported.has(mapped) ? mapped : '';
+}
+
+function convertMarkdownLinks(text) {
+  return text.replaceAll(
+    /\[([^\]]+)\]\(([^)\s]+)\)/g,
+    (_match, label, url) => `\\href{${url}}{${label}}`
+  );
+}
+
+function makeInlineListings(content) {
+  const delimiters = ['|', '!', ';', '+', '/', '~', '@', '#', '%', '^', '&', ':'];
+  const delimiter = delimiters.find(candidate => !content.includes(candidate));
+
+  if (delimiter) return `\\lstinline[style=moderninline]${delimiter}${content}${delimiter}`;
+  return `\\texttt{${escapeLaTeX(content)}}`;
+}
+
 function processToken(token) {
   switch (token.type) {
     case 'text':
@@ -56,7 +132,7 @@ function processToken(token) {
       if (SETTINGS.useDropCaps) {
         result = result
           .replaceAll(
-            /(# .*?\n(\n|<div class="pov">.*?<\/div>)*)(\*)?(— |"|„)?([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ])([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ,.?!;:]*)(.*?)\n/g,
+            /(# .*?\n(\n|<div class="pov">.*?<\/div>)*|---\n+|\*\*\*\n+|___\n+)(\*)?(— |"|„)?([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ])([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ,.?!;:]*)(.*?)\n/g,
             (_match, m1, _m2, m3, _m4, m5, m6, m7) => `${m1}\\lettrine[lines=3, lraise=0, lhang=0, nindent=${['L'].includes(m5) ? 1.5 : 0.5}em, findent=${['W', 'T'].includes(m5) ? 0.2 : (['L'].includes(m5) ? -0.9 : 0.1)}em, realheight=true, grid=true, loversize=0, depth=${['J', 'Q'].includes(m5) ? 1 : 0}]{${m5}}{${m6}}${m3 === undefined ? '' : m3}${m7}\n\\zz\n`
           );
       }
@@ -95,11 +171,16 @@ function processToken(token) {
       result = result
         .replaceAll(/\*(.*?)\*/g, '\\emph{$1}');
 
+      result = convertMarkdownLinks(result);
+
       return result;
     case 'inlineCode':
-      return `\\texttt{${escapeLaTeX(token.content)}}`;
+      return makeInlineListings(token.content);
     case 'codeBlock':
-      return `\\begin{verbatim}\n${token.content}\n\\end{verbatim}`;
+      const language = mapMarkdownLanguageToListings(token.language);
+      const languageOption = language ? `[language=${language}]` : '';
+      const safeContent = token.content.replaceAll('\\end{lstlisting}', '\\end{lstlisting}\\relax{}');
+      return `\\begin{lstlisting}${languageOption}\n${safeContent}\n\\end{lstlisting}`;
   }
 }
 

@@ -9,7 +9,7 @@ const sanitizeFilename = require("./functions/sanitizeFilename");
 
 function readInputFiles() {
   const isMarkdownFileRegex = new RegExp('\.md$');
-  return files = fs.readdirSync(SOURCE_PATH)
+  return fs.readdirSync(SOURCE_PATH)
     .filter(fileName => isMarkdownFileRegex.test(fileName))
     .map(fileName => ({
       fileName,
@@ -34,34 +34,41 @@ async function saveOutputFiles(bookData) {
   let barPdf;
   if (SETTINGS.convertToPdf) barPdf = multiBar.create(length, 0);
 
-  const work = titles.map(title => {
-
+  const work = titles.map(async title => {
     bookData[title].fileName = (bookData[title].isStoryGroup ? '_' : '') +
       sanitizeFilename(bookData[title].title);
 
-    return new Promise((resolve) => {
+    if (bookData[title].isStoryGroup) {
+      fs.writeFile('./output/' + bookData[title].fileName + '.md', bookData[title].sections.map(section => section.markdown).join("\n\n***\n\n"), () => { });
+    }
 
-      if (bookData[title].isStoryGroup) {
-        fs.writeFile('./output/' + bookData[title].fileName + '.md', bookData[title].sections.map(section => section.markdown).join("\n\n***\n\n"), () => { });
+    try {
+      await makeEpub(bookData[title]);
+    } catch (error) {
+      console.error(`EPUB failed for "${title}": ${error.message}`);
+    } finally {
+      barEpub.increment(1, { filename: title });
+    }
+
+    if (SETTINGS.convertToPdf) {
+      let timeoutHandle;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutHandle = setTimeout(() => {
+          reject(new Error('pdf creation was taking too long'));
+        }, 120000);
+      });
+      try {
+        await Promise.race([makePdf(bookData[title]), timeoutPromise]);
+      } catch (error) {
+        console.error(`PDF failed for "${title}": ${error.message}`);
+      } finally {
+        clearTimeout(timeoutHandle);
+        barPdf.increment(1, { filename: title });
       }
-
-      makeEpub(bookData[title])
-        .then(() => {
-          barEpub.increment(1, { filename: title });
-          if (!SETTINGS.convertToPdf) resolve();
-        });
-
-      if (SETTINGS.convertToPdf) {
-        makePdf(bookData[title])
-          .then(() => {
-            barPdf.increment(1, { filename: title });
-            resolve();
-          });
-      }
-    });
+    }
   });
 
-  await Promise.all(work);
+  await Promise.allSettled(work);
 
   barEpub.update(length, { filename: 'epub files done' });
   if (SETTINGS.convertToPdf) {

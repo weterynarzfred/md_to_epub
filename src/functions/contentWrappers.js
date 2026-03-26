@@ -35,9 +35,8 @@ function getContentOpf(data) {
 
 function getHtmlStructure(data) {
   let content = '';
-  for (const section of data.sections) {
+  for (const section of data.sections)
     content += `<div class="section">${section.html}</div>`;
-  }
 
   return `<?xml version="1.0" encoding="utf-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${data.language}" lang="${data.language}">
@@ -108,6 +107,9 @@ function getTexStructure(data) {
   // cSpell:disable
   return `% chktex-file 1
 \\documentclass[10pt, twoside, hidelinks]{article}
+\\AtBeginDocument{
+  \\fontsize{8.5}{11}\\selectfont
+}
 
 \\usepackage{emptypage}
 \\usepackage[protrusion]{microtype} % micro typography - protrusions
@@ -129,12 +131,26 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 
 % set fonts
 \\usepackage{fontspec}
-\\setmainfont{Crimson Text}
+\\usepackage{xeCJK}
+\\setmainfont{Crimson Pro}
+\\setmonofont{Fira Code}
+\\setCJKmainfont{Noto Serif JP}
+\\setCJKmonofont{Noto Serif JP}
+
+\\xeCJKsetup{
+  CJKecglue=\\hskip 0pt plus 0pt minus 0pt,
+  AllowBreakBetweenPuncts=false
+}
 
 % substitute missing three per em space
 \\usepackage{newunicodechar}
 \\newfontfamily\\fallbackfont{CMU Serif Roman}
 \\newunicodechar{ }{{\\fallbackfont\\symbol{"2004}}} % chktex 18
+\\newunicodechar{ }{{\\fallbackfont\\symbol{"202F}}} % chktex 18
+\\newunicodechar{↑}{{\\fallbackfont ↑}}
+\\newunicodechar{→}{{\\fallbackfont →}}
+\\newunicodechar{↓}{{\\fallbackfont ↓}}
+\\newunicodechar{←}{{\\fallbackfont ←}}
 
 % hide some warnings
 \\raggedbottom
@@ -143,6 +159,7 @@ ${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, binding
 
 % styling titles
 \\usepackage{titlesec}
+\\setcounter{secnumdepth}{0}
 ${useChapterNumbers ? `
 \\titleformat{\\section}[block]{\\vspace*{2\\baselineskip}\\LARGE\\bfseries\\filcenter}{\\footnotesize\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
 ` : `
@@ -178,6 +195,68 @@ ${style === 'print' ? `\\newcommand*{\\OrgSection}{}
 \\usepackage{lettrine}
 \\usepackage{textcase}
 \\renewcommand{\\LettrineTextFont}{\\footnotesize\\MakeTextUppercase}
+
+% code blocks
+\\usepackage{xcolor}
+\\usepackage{listings}
+\\definecolor{codebg}{HTML}{F7F7FA}
+\\definecolor{codeframe}{HTML}{D8DCE6}
+\\definecolor{codecomment}{HTML}{6B7280}
+\\definecolor{codekeyword}{HTML}{0B5CAD}
+\\definecolor{codestring}{HTML}{8A3B12}
+\\lstdefinelanguage{CSS}{
+  morekeywords={color,background,background-color,font-size,font-family,font-weight,line-height,display,position,top,right,bottom,left,width,height,max-width,min-width,margin,padding,border,border-radius,box-shadow,opacity,overflow,z-index,grid,flex,align-items,justify-content,transform,transition,animation,@media,@keyframes},
+  sensitive=false,
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  alsoletter={-@},
+}
+\\lstdefinelanguage{JavaScript}{
+  morekeywords={break,case,catch,class,const,continue,debugger,default,delete,do,else,export,extends,false,finally,for,from,function,if,import,in,instanceof,let,new,null,return,super,switch,this,throw,true,try,typeof,var,void,while,with,yield,async,await},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]"
+}
+\\lstdefinelanguage{bash}{
+  morekeywords={if,then,else,fi,for,do,done,case,esac,function,in,while,until,echo,export,local,readonly,return,shift,test},
+  sensitive=true,
+  morecomment=[l]{\\#},
+  morestring=[b]',
+  morestring=[b]"
+}
+\\lstdefinestyle{moderncode}{
+  basicstyle=\\ttfamily\\scriptsize,
+  backgroundcolor=\\color{codebg},
+  frame=single,
+  rulecolor=\\color{codeframe},
+  framerule=0.4pt,
+  framesep=6pt,
+  xleftmargin=0.4em,
+  xrightmargin=0.4em,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=2,
+  upquote=true,
+  commentstyle=\\itshape\\color{codecomment},
+  keywordstyle=\\bfseries\\color{codekeyword},
+  stringstyle=\\color{codestring}
+}
+\\lstdefinestyle{moderninline}{
+  basicstyle=\\ttfamily\\tiny,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  upquote=true
+}
+\\lstset{style=moderncode}
 
 % line height
 \\linespread{1.15}
