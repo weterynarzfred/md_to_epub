@@ -1,54 +1,156 @@
-# md to epub
+# md to epub/pdf
 
-This is a simple node.js script that converts markdown into epub and pdf files.
+Node.js tool that converts markdown into EPUB and (optionally) PDF.
 
-If you want to make something similar yourself:
-- For generating html from markdown I'm using [markdown-it](https://github.com/markdown-it/markdown-it).
-- For making epub files I'm using [jszip](https://github.com/Stuk/jszip) (an epub is just a zip with specific contents).
-- For hyphenation I'm using [hyphen](https://github.com/ytiurin/hyphen).
+- EPUB is built with `markdown-it` + `jszip`.
+- PDF is built with a custom markdown-to-TeX parser + `xelatex`.
+- No pandoc is used.
+
+![conversion example](screenshot.jpg)
 
 ## command
-The `make_books` script reads markdown from `SOURCE_PATH` in `./src/constants.js`.
-You can override it per run with `MD_TO_EPUB_SOURCE_PATH` (for example: `MD_TO_EPUB_SOURCE_PATH="D:/notes/" npm run make_books`).
 
-- `make_books` - creates epub and (optionally) pdf files in the `output` folder.
+`make_books` reads markdown files from `SOURCE_PATH` in `./src/constants.js`.
+
+You can override input dir per run:
+
+```bash
+MD_TO_EPUB_SOURCE_PATH="D:/notes/" npm run make_books
+```
+
+Available npm script:
+
+- `make_books` - creates `.epub` and (if enabled) `.pdf` files in `./output`.
 
 ## settings
-Settings are located in `./src/constants.js`.
-- `author` - default author of the book, can be overridden by the `author` param if `SETTINGS.parseGtAsProps` is set to `true`.
-- `publisher` - default publisher of the book, can be overridden same as author.
-- `language` - default language code of the book, can be overridden same as author.
-- `convertToPdf` - when `true`, runs xelatex and creates pdf files in addition to epub.
-- `filter` - a function that will decide whether to parse a file or skip it.
-- `parseGtAsProps` - enables special parameters parsed from lines starting with `>`, check below.
-- `addEmptyLines` - markdown removes single linebreaks by default, this simply doubles every linebreak to display them as paragraphs.
-- `hyphenate` - adds soft hyphens for html/epub output.
-- `replaceSeparators` - replaces markdown separators (`<hr>`) with stylized asterisks.
-- `stripCodeBlocks` - an array of code languages that should be removed, set to `true` to remove all code blocks.
-- `stripComments` - removes markdown comments denoted with double percent signs eg. `%%comment%%`.
 
-## special parameters
-If you set `SETTINGS.parseGtAsProps` as true all lines starting with `>` will be treated as parameters. If the param starts with `#` it is marked as a tag. Otherwise the script expects key value pairs separated by two colons.
+Settings live in `./src/constants.js`.
+
+- `author` - default author.
+- `publisher` - default publisher.
+- `language` - default language (`en`, `pl`, etc.).
+- `convertToPdf` - when `true`, runs `xelatex` and generates PDF.
+- `filter` - decides whether a file is included.
+- `parseGtAsProps` - enables metadata parsing from `>` lines and front matter.
+- `addEmptyLines` - doubles line breaks to preserve manual pacing.
+- `hyphenate` - adds soft hyphens for EPUB/HTML flow.
+- `replaceSeparators` - normalizes separator lines and converts them to scene breaks.
+- `stripCodeBlocks` - array of code languages to strip; `true` strips all fenced code blocks.
+- `stripComments` - strips `%%comment%%` fragments.
+
+### filter callback shape
+
+`filter` receives:
+
+- `params` - metadata object parsed from the file (or `{}` if `parseGtAsProps === false`).
+- `fileName` - source file name (for example `chapter-01.md`).
+
+Return `true` to include the file, `false` to skip it.
 
 Example:
-```
-> #prose 
-> language:: en
-> story:: [[Little Cats]]
-> order:: cats chapter 1
-> character:: [[Cat 2]], [[Cat 3]]
-```
-will be parsed as:
-```json
-{
-  'tag': 'prose',
-  'language': 'en',
-  'story': '[[Little Cats]]'
-  'order': 'cats chapter 1',
-  'character': '[[Cat 2]], [[Cat 3]]'
+
+```js
+filter: (params, fileName) => {
+  if (fileName === 'diary.md') return true;
+  if (params.skip) return false;
+  const tags = params.tag?.split(/\s+/).filter(Boolean) ?? [];
+  return tags.includes('prose') || tags.includes('article');
 }
 ```
 
-- Files with same `story` param will be grouped together.
-- Files are ordered by the `order` param if available or the name of the file.
-- `language` param will override `SETTINGS.language` for the specific story. If multiple files belong to the same story, only the language of the first one will be set in the epub.
+## metadata in source files
+
+When `parseGtAsProps` is enabled, metadata can be provided in two formats:
+
+- leading `>` lines
+- YAML-like front matter (`--- ... ---`)
+
+`>` example:
+
+```md
+> #prose
+> language:: en
+> story:: [[Little Cats]]
+> order:: cats chapter 1
+> author:: Jane Doe
+> cover:: covers/little-cats.jpg
+```
+
+Parsed as plain strings:
+
+```json
+{
+  "tag": "prose",
+  "language": "en",
+  "story": "[[Little Cats]]",
+  "order": "cats chapter 1",
+  "author": "Jane Doe",
+  "cover": "covers/little-cats.jpg"
+}
+```
+
+Grouping and ordering behavior:
+
+- Same `story` value => grouped into one output book.
+- Group sections are sorted by `order`, then file title.
+- `author`, `publisher`, `language`, `cover` can override defaults.
+
+## cover images
+
+Set `cover` metadata in any chapter of a story/book:
+
+```md
+> cover:: covers/book-cover.jpg
+```
+
+How it works now:
+
+- Path is resolved relative to `SOURCE_PATH`.
+- The cover is copied into the EPUB package and added as a title page.
+- The same cover is inserted at the beginning of the PDF.
+
+Current constraints:
+
+- EPUB manifest currently declares the cover as `image/jpeg`, so `.jpg/.jpeg` is the safe format.
+- If multiple sections in one story set `cover`, the last one seen wins.
+
+## markdown support (current reality)
+
+### PDF path
+
+Works well:
+
+- headings (`#`, `##`, `###`, `####`)
+- italics/bold (`*x*`, `**x**`, `__x__`, `***x***`)
+- inline code and fenced code blocks (with Prism-based highlighting)
+- unordered and ordered lists (simple structure)
+- inline links in `[label](url)` form
+- custom POV blocks: `<div class="pov">Name</div>`
+- separators (`***`, also normalized from `---` and `___`)
+
+Likely missing or brittle:
+
+- markdown tables
+- markdown images (`![alt](path)`)
+- blockquotes and many advanced markdown extensions
+- reference-style links (`[x][id]`) and complex link edge cases
+- deeply nested list structures
+
+### EPUB path
+
+Works well:
+
+- standard markdown via `markdown-it` (headings, paragraphs, links, lists, code, etc.)
+- typographic quotes via `markdown-it` typographer
+- custom POV and separator styling
+
+Current limitations:
+
+- In-body markdown images are not copied into the EPUB package.
+  Only `cover` is packaged automatically.
+- Tables may render but have no dedicated styling.
+
+## requirements
+
+- Node.js
+- `xelatex` available in `PATH` (only needed when `convertToPdf: true`)
