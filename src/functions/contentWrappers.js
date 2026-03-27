@@ -9,7 +9,11 @@ function getContentOpf(data) {
     accumulator.push(sort.join(' ').replace(' ', ', '));
     return accumulator;
   }, []).join(' &amp; ');
-  const authors = data.author.map(author => `<dc:creator opf:role="aut" opf:file-as="${authorSort}">${author}</dc:creator>`).join("\n");
+
+  const authors = data.author
+    .map(author => `<dc:creator opf:role="aut" opf:file-as="${authorSort}">${author}</dc:creator>`)
+    .join('\n');
+
   const hash = crypto.createHash('md5').update(JSON.stringify(data)).digest('hex');
 
   return `<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="md_hash">
@@ -90,137 +94,95 @@ function getTexStructure(data) {
     English: 'english',
   };
 
+  const texLanguage = languages[data.language] || 'english';
+  const secondaryLanguage = texLanguage === 'english' ? 'polish' : 'english';
+  const tocTitle = texLanguage === 'polish' ? 'Spis Tre\u015bci' : 'Table of Contents';
+  const useToc = false;
+
   let content = '';
   for (const section of data.sections) {
     processMarkdownToTex(section);
     content += section.markdownTex;
   }
 
-  // const style = 'print';
-  const style = 'screen';
-  const margins = [1.6, 1.6, 1.6, 1.6];
-  const bidingOffset = 0.6;
-  const useToc = false;
-  const useChapterNumbers = false;
-
-  // TODO: add an option to disable drop caps
-  // cSpell:disable
   return `% chktex-file 1
-\\documentclass[10pt, twoside, hidelinks]{article}
-\\AtBeginDocument{
-  \\fontsize{8.5}{11}\\selectfont
-}
+\\documentclass[10pt,twoside]{article}
 
-\\usepackage{emptypage}
-\\usepackage[protrusion]{microtype} % micro typography - protrusions
-\\usepackage[${languages[data.language] || 'english'}]{babel} % for hyphenation, I think
-\\usepackage[all,defaultlines=2]{nowidow} % deal with widows and orphans
-\\usepackage{needspace}
-\\usepackage{pgfornament}
-\\usepackage{incgraph}
+\\usepackage[
+  paperheight=210mm,
+  paperwidth=148mm,
+  top=1.6cm,
+  bottom=1.6cm,
+  inner=1.9cm,
+  outer=1.9cm,
+  footskip=0.75cm
+]{geometry}
 
-${style === 'screen' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3] + bidingOffset / 2}cm, right=${margins[1] + bidingOffset / 2}cm, footskip=0.75cm]{geometry}` : ''}
-${style === 'print' ? `\\usepackage[paperheight=210mm, paperwidth=148mm, bindingoffset=${bidingOffset}cm, top=${margins[0]}cm, bottom=${margins[2]}cm, left=${margins[3]}cm, right=${margins[1]}cm, footskip=0.75cm]{geometry}` : ''}
-
-% hyphenation settings - https://tug.org/utilities/plain/cseq.html
-\\doublehyphendemerits=900000
-\\finalhyphendemerits=900000
-\\pretolerance=-1
-\\tolerance=400
+\\usepackage{microtype}
+\\usepackage[all,defaultlines=2]{nowidow}
+\\finalhyphendemerits=1000000
+\\tolerance=1000
 \\setlength{\\emergencystretch}{2em}
 
-% set fonts
 \\usepackage{fontspec}
+\\usepackage{polyglossia}
+\\setdefaultlanguage{${texLanguage}}
+\\setotherlanguage{${secondaryLanguage}}
+
 \\usepackage{xeCJK}
 \\setmainfont{Crimson Pro}
 \\setmonofont{Fira Code}
 \\setCJKmainfont{Noto Serif JP}
 \\setCJKmonofont{Noto Serif JP}
+\\xeCJKsetup{AllowBreakBetweenPuncts=false}
 
-\\xeCJKsetup{
-  CJKecglue=\\hskip 0pt plus 0pt minus 0pt,
-  AllowBreakBetweenPuncts=false
-}
-
-% substitute missing three per em space
 \\usepackage{newunicodechar}
-\\newfontfamily\\fallbackfont{CMU Serif Roman}
-\\newunicodechar{ }{{\\fallbackfont\\symbol{"2004}}} % chktex 18
-\\newunicodechar{ }{{\\fallbackfont\\symbol{"202F}}} % chktex 18
-\\newunicodechar{↑}{{\\fallbackfont ↑}}
-\\newunicodechar{→}{{\\fallbackfont →}}
-\\newunicodechar{↓}{{\\fallbackfont ↓}}
-\\newunicodechar{←}{{\\fallbackfont ←}}
+\\newunicodechar{\u2004}{\\hspace{0.333em}}
 
-% hide some warnings
-\\raggedbottom
-\\hbadness=3000
-\\hfuzz=2pt
+\\usepackage{textcomp}
+\\usepackage[hidelinks]{hyperref}
+\\usepackage{xurl}
+\\urlstyle{same}
 
-% styling titles
 \\usepackage{titlesec}
 \\setcounter{secnumdepth}{0}
-${useChapterNumbers ? `
-\\titleformat{\\section}[block]{\\vspace*{2\\baselineskip}\\LARGE\\bfseries\\filcenter}{\\footnotesize\\textmd{Rozdział \\thetitle}\\\\}{0pt}{}
-` : `
-\\titleformat{\\section}[block]{\\vspace*{\\baselineskip}\\LARGE\\bfseries\\filcenter}{\\footnotesize\\\\}{0pt}{}
-`}
-\\titlespacing*{\\section}{0pt}{0pt}{2.37\\baselineskip}
+\\titleformat{\\section}[block]{\\vspace*{\\baselineskip}\\LARGE\\bfseries\\filcenter}{}{0pt}{}
+\\titlespacing*{\\section}{0pt}{0pt}{2\\baselineskip}
 
-% begin each section on a new page
-${style === 'screen' ? `\\newcommand*{\\OrgSection}{}
-\\let\\OrgSection\\section
-\\renewcommand*{\\section}{\\clearpage\\OrgSection}` : ''}
-${style === 'print' ? `\\newcommand*{\\OrgSection}{}
-\\let\\OrgSection\\section
-\\renewcommand*{\\section}{\\cleardoublepage\\OrgSection}` : ''}
+\\let\\OriginalSection\\section
+\\renewcommand*{\\section}{\\clearpage\\OriginalSection}
 
-% table of contents
-\\usepackage{titletoc}
-\\contentsmargin{0em}
-\\renewcommand\\contentspage{\\hspace{.2em}\\thecontentspage}
-\\renewcommand\\contentslabel{}
-\\titlecontents{section}[0em]{}{}{}{\\hspace{0.2em}\\titlerule*[0.5em]{.}\\contentspage}
-\\titlecontents{subsection}[1em]{}{}{}{\\hspace{0.2em}\\titlerule*[0.5em]{.}\\contentspage}
-\\titlecontents{subsubsection}[2em]{}{}{}{\\hspace{0.2em}\\titlerule*[0.5em]{.}\\contentspage}
-\\addto{\\captionspolish}{\\renewcommand*{\\contentsname}{\\vspace*{-2.25\\baselineskip} \\\\ Spis Treści \\vspace*{-0.5\\baselineskip}}}
+\\renewcommand{\\contentsname}{${tocTitle}}
 
-% paragraphs
 \\usepackage{parskip}
-\\setlength{\\parskip}{0pt} % paragraph spacing
-\\setlength{\\parindent}{1.5em} % indentation
-\\setlength{\\lineskiplimit}{-1em} % this somehow helps make section titles height to be an integer multiple of baselineskip
+\\setlength{\\parskip}{0pt}
+\\setlength{\\parindent}{1.5em}
+\\clubpenalty=10000
+\\widowpenalty=10000
+\\displaywidowpenalty=10000
 
-% lists
+\\newcommand{\\AfterListNoIndent}{\\par\\noindent\\ignorespaces}
 \\usepackage{enumitem}
-\\setlist[itemize]{leftmargin=1.5em}
+\\setlist[itemize]{leftmargin=1.5em,after=\\AfterListNoIndent}
+\\setlist[enumerate]{leftmargin=1.5em,after=\\AfterListNoIndent}
 
-% drop caps
-\\usepackage{lettrine}
-\\usepackage{textcase}
-\\renewcommand{\\LettrineTextFont}{\\footnotesize\\MakeTextUppercase}
+\\usepackage{needspace}
+\\usepackage{pgfornament}
+\\usepackage{incgraph}
 
-% code blocks
 \\usepackage{xcolor}
 \\usepackage{fvextra}
-\\definecolor{codebg}{HTML}{F7F7FA}
-\\definecolor{codeframe}{HTML}{D8DCE6}
-\\definecolor{codeComment}{HTML}{6B7280}
-\\definecolor{codePunctuation}{HTML}{6B7280}
-\\definecolor{codeProperty}{HTML}{1D4ED8}
-\\definecolor{codeConstant}{HTML}{7C3AED}
-\\definecolor{codeDeleted}{HTML}{B91C1C}
-\\definecolor{codeNumber}{HTML}{B45309}
-\\definecolor{codeSelector}{HTML}{0F766E}
-\\definecolor{codeString}{HTML}{8A3B12}
-\\definecolor{codeInserted}{HTML}{166534}
-\\definecolor{codeOperator}{HTML}{374151}
-\\definecolor{codeKeyword}{HTML}{0B5CAD}
-\\definecolor{codeFunction}{HTML}{7C2D12}
-\\definecolor{codeRegex}{HTML}{0369A1}
-\\definecolor{codeImportant}{HTML}{B91C1C}
-\\definecolor{codeVariable}{HTML}{1F2937}
-\\newcommand{\\mdcodefont}{\\ttfamily\\fontsize{5}{6}\\selectfont}
+\\definecolor{codeGruvFg}{HTML}{3C3836}
+\\definecolor{codeGruvGray}{HTML}{928374}
+\\definecolor{codeGruvRed}{HTML}{CC241D}
+\\definecolor{codeGruvGreen}{HTML}{98971A}
+\\definecolor{codeGruvYellow}{HTML}{D79921}
+\\definecolor{codeGruvBlue}{HTML}{458588}
+\\definecolor{codeGruvPurple}{HTML}{B16286}
+\\definecolor{codeGruvAqua}{HTML}{689D6A}
+\\definecolor{codeGruvOrange}{HTML}{D65D0E}
+\\definecolor{codeframe}{HTML}{D5C4A1}
+\\newcommand{\\mdcodefont}{\\ttfamily\\fontsize{6.5}{8}\\selectfont\\color{codeGruvFg}}
 \\DefineVerbatimEnvironment{mdcodeblock}{Verbatim}{
   commandchars=\\\\\\{\\},
   breaklines=true,
@@ -228,27 +190,19 @@ ${style === 'print' ? `\\newcommand*{\\OrgSection}{}
   breakautoindent=true,
   breaksymbolleft={},
   breaksymbolright={},
-  formatcom=\\mdcodefont\\setlength{\\lineskiplimit}{0pt}\\setlength{\\lineskip}{1pt},
+  formatcom=\\mdcodefont,
   frame=single,
   framerule=0.4pt,
   rulecolor=\\color{codeframe},
   framesep=4pt
 }
-\\newcommand{\\mdinlinecode}[1]{%
-  {{\\mdcodefont #1}}%
-}
+\\newcommand{\\mdinlinecode}[1]{{\\mdcodefont\\color{codeGruvBlue} #1}}
 
-% line height
-\\linespread{1.15}
-
-% change page numbering style
 \\setlength{\\headheight}{0pt}
 \\usepackage{fancyhdr}
 \\fancypagestyle{fancy}{
   \\fancyhf{}
-${style === 'screen' ? `\\fancyfoot[C]{--- \\thepage\\ ---}` : ''}
-${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
-\\fancyfoot[EL]{\\thepage}` : ''}
+  \\fancyfoot[C]{\\thepage}
   \\renewcommand{\\headrulewidth}{0pt}
 }
 \\fancypagestyle{plain}{
@@ -256,57 +210,33 @@ ${style === 'print' ? `\\fancyfoot[OR]{\\thepage}
 }
 \\pagestyle{fancy}
 
-% macros
 \\newcommand{\\pov}[1]{
-  \\needspace{1.5\\baselineskip}
+  \\Needspace{4\\baselineskip}
   \\vspace{2\\baselineskip}
   \\begin{center}
-  \\textbf{#1}
+    \\textbf{#1}
   \\end{center}
   \\vspace{\\baselineskip}
-  \\noindent\\ignorespaces
+  \\par\\noindent\\ignorespaces
 }
 
 \\newcommand{\\sectionpov}[1]{
-  \\vspace{0em}
   \\begin{center}
-  \\textbf{#1}
+    \\textbf{#1}
   \\end{center}
   \\vspace{\\baselineskip}
-  \\noindent\\ignorespaces
+  \\par\\noindent\\ignorespaces
 }
 
 \\newcommand{\\scenebreak}{
-  \\needspace{1.5\\baselineskip}
+  \\Needspace{3\\baselineskip}
   \\vspace{\\baselineskip}
   \\begin{center}
-    \\pgfornament[width = 3cm]{88}
+    \\pgfornament[width=3cm]{88}
   \\end{center}
   \\vspace{\\baselineskip}
   \\noindent\\ignorespaces
 }
-
-\\newcount\\zzc
-\\makeatletter
-\\def\\zz{%
-\\ifnum\\prevgraf<\\c@L@lines
-\\zzc\\z@
-\\loop
-\\ifnum\\zzc<\\prevgraf
-\\advance\\zzc\\@ne
-\\afterassignment\\zzda\\count@\\L@parshape\\relax
-\\repeat
-\\parshape\\L@parshape
-\\fi}
-\\def\\zzda{\\afterassignment\\zzdb\\dimen@}
-\\def\\zzdb{\\afterassignment\\zzdef\\dimen@}
-\\def\\zzdef#1\\relax{\\edef\\L@parshape{\\the\\numexpr\\count@-1\\relax\\space #1}}
-\\makeatother
-
-% -----
-\\title{\\vspace{3em}\\Huge\\bfseries{${data.title.replace('_', '\\_')}}\\vspace{0em}}
-\\author{\\normalsize ${data.author.join(', ').replace('_', '\\_')}}
-\\date{}
 
 \\begin{document}
 
@@ -314,21 +244,17 @@ ${data.cover === undefined ? '' : `\\incgraph{${SOURCE_PATH}${data.cover}}`}
 
 ${content}
 
-${style === 'print' ? `
-\\newpage
-\\thispagestyle{empty}
-\\mbox{}
-\\newpage
-` : ''}
-
 ${useToc ? `
 \\clearpage
-\\pdfbookmark{Spis Treści}{toc}
 \\tableofcontents
 ` : ''}
 
 \\end{document}`;
-  // cSpell:enable
 }
 
-module.exports = { getContentOpf, getHtmlStructure, getEpubTitlePage, getTexStructure };
+module.exports = {
+  getContentOpf,
+  getHtmlStructure,
+  getEpubTitlePage,
+  getTexStructure,
+};

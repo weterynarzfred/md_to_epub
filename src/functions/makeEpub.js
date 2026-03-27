@@ -23,7 +23,7 @@ function makeEpub(data) {
     zipOebps.file('content.opf', getContentOpf(data));
     zipOebps.folder('Styles')
       .file('style.css', fs.readFileSync('./src/epub_parts/style.css'));
-    zipText = zipOebps.folder('Text');
+    const zipText = zipOebps.folder('Text');
     if (data.cover !== undefined) {
       zipText.file('titlepage.xhtml', getEpubTitlePage(data));
       zipOebps.file(data.cover, fs.readFileSync(SOURCE_PATH + data.cover));

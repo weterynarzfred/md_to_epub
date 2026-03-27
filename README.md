@@ -26,7 +26,6 @@ Settings are located in `./src/constants.js`.
 - `replaceSeparators` - replaces markdown separators (`<hr>`) with stylized asterisks.
 - `stripCodeBlocks` - an array of code languages that should be removed, set to `true` to remove all code blocks.
 - `stripComments` - removes markdown comments denoted with double percent signs eg. `%%comment%%`.
-- `useDropCaps` - enables TeX drop caps in pdf output.
 
 ## special parameters
 If you set `SETTINGS.parseGtAsProps` as true all lines starting with `>` will be treated as parameters. If the param starts with `#` it is marked as a tag. Otherwise the script expects key value pairs separated by two colons.

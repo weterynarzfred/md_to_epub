@@ -22,17 +22,90 @@ require('prismjs/components/prism-php');
 require('prismjs/components/prism-ruby');
 require('prismjs/components/prism-latex');
 
+const ELLIPSIS = '\u2026';
+const EM_DASH = '\u2014';
+const EN_DASH = '\u2013';
+const THREE_PER_EM_SPACE = '\u2004';
+const CODE_BREAK_MARKER = '\uE000';
+const CODE_BACKSLASH_MARKER = '\uE001';
+const TEXT_BACKSLASH_MARKER = '\uE002';
+
+const CODE_BREAK_CHARS = new Set([
+  '/',
+  '\\',
+  '.',
+  '_',
+  '-',
+  ':',
+  '?',
+  '&',
+  '#',
+  '+',
+  ',',
+  ';',
+  '@',
+  '|',
+  '(',
+  ')',
+  '[',
+  ']',
+]);
+
+const FORCED_CODE_BREAK_RUN_LENGTH = 16;
+const SEPARATOR_LINE_REGEX = /^\s*(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})\s*$/gm;
+const PRISM_TYPE_TO_LATEX_COLOR = {
+  comment: 'codeGruvGray',
+  prolog: 'codeGruvGray',
+  doctype: 'codeGruvGray',
+  cdata: 'codeGruvGray',
+  punctuation: 'codeGruvGray',
+  operator: 'codeGruvRed',
+  namespace: 'codeGruvBlue',
+  property: 'codeGruvBlue',
+  tag: 'codeGruvBlue',
+  'attr-name': 'codeGruvAqua',
+  'attr-value': 'codeGruvGreen',
+  boolean: 'codeGruvPurple',
+  number: 'codeGruvPurple',
+  constant: 'codeGruvPurple',
+  symbol: 'codeGruvPurple',
+  deleted: 'codeGruvRed',
+  selector: 'codeGruvBlue',
+  string: 'codeGruvGreen',
+  char: 'codeGruvGreen',
+  builtin: 'codeGruvOrange',
+  inserted: 'codeGruvGreen',
+  entity: 'codeGruvYellow',
+  url: 'codeGruvAqua',
+  atrule: 'codeGruvOrange',
+  keyword: 'codeGruvRed',
+  function: 'codeGruvBlue',
+  'class-name': 'codeGruvYellow',
+  regex: 'codeGruvAqua',
+  important: 'codeGruvOrange',
+  variable: 'codeGruvBlue',
+  parameter: 'codeGruvOrange',
+  interpolation: 'codeGruvAqua',
+  'interpolation-punctuation': 'codeGruvRed',
+  'template-punctuation': 'codeGruvRed',
+  'template-string': 'codeGruvGreen',
+};
+
 function escapeLaTeX(str) {
   return str
-    .replace(/\\/g, '\\textbackslash{}')
+    .replace(/\\/g, TEXT_BACKSLASH_MARKER)
     .replace(/{/g, '\\{')
     .replace(/}/g, '\\}')
-    .replace(/textbackslash\\{\\}/g, 'textbackslash{}')
     .replace(/\$/g, '\\$')
     .replace(/_/g, '\\_')
     .replace(/#([^ #])/g, '\\#$1')
     .replace(/&/g, '\\&')
-    .replace(/%/g, '\\%');
+    .replace(/%/g, '\\%')
+    .replaceAll(TEXT_BACKSLASH_MARKER, '\\textbackslash{}')
+    .replace(/\u2192/g, '\\ensuremath{\\rightarrow}')
+    .replace(/\u2190/g, '\\ensuremath{\\leftarrow}')
+    .replace(/\u2191/g, '\\ensuremath{\\uparrow}')
+    .replace(/\u2193/g, '\\ensuremath{\\downarrow}');
 }
 
 function tokenizeMarkdown(md) {
@@ -108,47 +181,8 @@ function mapMarkdownLanguageToPrism(language) {
     latex: 'latex',
   };
 
-  const normalized = language.toLowerCase();
-  return aliases[normalized] ?? '';
+  return aliases[language.toLowerCase()] ?? '';
 }
-
-const PRISM_TOKEN_COLORS = {
-  comment: 'codeComment',
-  prolog: 'codeComment',
-  doctype: 'codeComment',
-  cdata: 'codeComment',
-  punctuation: 'codePunctuation',
-  namespace: 'codePunctuation',
-  property: 'codeProperty',
-  tag: 'codeProperty',
-  constant: 'codeConstant',
-  symbol: 'codeConstant',
-  deleted: 'codeDeleted',
-  boolean: 'codeNumber',
-  number: 'codeNumber',
-  selector: 'codeSelector',
-  'attr-name': 'codeSelector',
-  string: 'codeString',
-  char: 'codeString',
-  builtin: 'codeString',
-  inserted: 'codeInserted',
-  operator: 'codeOperator',
-  entity: 'codeOperator',
-  url: 'codeOperator',
-  atrule: 'codeKeyword',
-  'attr-value': 'codeString',
-  keyword: 'codeKeyword',
-  function: 'codeFunction',
-  'class-name': 'codeFunction',
-  regex: 'codeRegex',
-  important: 'codeImportant',
-  variable: 'codeVariable',
-};
-
-const CODE_BREAK_MARKER = '\uE000';
-const CODE_BACKSLASH_MARKER = '\uE001';
-const CODE_BREAK_CHARS = new Set(['/', '\\', '.', '_', '-', ':', '?', '&', '#', '+', ',', ';', '@', '|', '(', ')', '[', ']']);
-const FORCED_CODE_BREAK_RUN_LENGTH = 16;
 
 function addCodeBreakHints(text) {
   let output = '';
@@ -171,15 +205,39 @@ function addCodeBreakHints(text) {
     nonWhitespaceRunLength += 1;
     const nextIsBreakable = next !== '' && !/\s/u.test(next);
     const breakAfterPunctuation = CODE_BREAK_CHARS.has(char) && nextIsBreakable;
-    const breakLongUnbrokenRun = nonWhitespaceRunLength >= FORCED_CODE_BREAK_RUN_LENGTH && nextIsBreakable;
+    const breakLongRun = nonWhitespaceRunLength >= FORCED_CODE_BREAK_RUN_LENGTH && nextIsBreakable;
 
-    if (breakAfterPunctuation || breakLongUnbrokenRun) {
+    if (breakAfterPunctuation || breakLongRun) {
       output += CODE_BREAK_MARKER;
       nonWhitespaceRunLength = 0;
     }
   }
 
   return output;
+}
+
+function escapeLatexCodeText(text) {
+  return text
+    .replace(/\t/g, '  ')
+    .replace(/\\/g, CODE_BACKSLASH_MARKER)
+    .replace(/{/g, '\\{')
+    .replace(/}/g, '\\}')
+    .replace(/\$/g, '\\$')
+    .replace(/_/g, '\\_')
+    .replace(/#/g, '\\#')
+    .replace(/&/g, '\\&')
+    .replace(/%/g, '\\%')
+    .replace(/\^/g, '\\textasciicircum{}')
+    .replace(/~/g, '\\textasciitilde{}')
+    .replaceAll(CODE_BACKSLASH_MARKER, '\\textbackslash{}')
+    .replace(/\u2192/g, '\\ensuremath{\\rightarrow}')
+    .replace(/\u2190/g, '\\ensuremath{\\leftarrow}')
+    .replace(/\u2191/g, '\\ensuremath{\\uparrow}')
+    .replace(/\u2193/g, '\\ensuremath{\\downarrow}');
+}
+
+function injectLatexBreakMarker(text) {
+  return text.replaceAll(CODE_BREAK_MARKER, '\\hspace{0pt}');
 }
 
 function flattenPrismTokens(tokens, activeTypes = [], result = []) {
@@ -197,141 +255,40 @@ function flattenPrismTokens(tokens, activeTypes = [], result = []) {
   return result;
 }
 
-function getPrismTokenColor(tokenTypes) {
-  for (let i = tokenTypes.length - 1; i >= 0; i--) {
-    const tokenType = tokenTypes[i];
-    if (PRISM_TOKEN_COLORS[tokenType]) return PRISM_TOKEN_COLORS[tokenType];
+function wrapWithColorPreservingNewlines(segment, color) {
+  if (segment.length === 0) return '';
+  if (!color) return segment;
+
+  const lines = segment.split('\n');
+  return lines
+    .map(line => (line.length === 0 ? '' : `\\textcolor{${color}}{${line}}`))
+    .join('\n');
+}
+
+function getPrismTokenColor(types) {
+  for (let i = types.length - 1; i >= 0; i--) {
+    const color = PRISM_TYPE_TO_LATEX_COLOR[types[i]];
+    if (color) return color;
   }
   return '';
 }
 
-function escapeLatexCodeText(text) {
-  return text
-    .replace(/\t/g, '  ')
-    .replace(/\\/g, CODE_BACKSLASH_MARKER)
-    .replace(/{/g, '\\{')
-    .replace(/}/g, '\\}')
-    .replace(/\$/g, '\\$')
-    .replace(/_/g, '\\_')
-    .replace(/#/g, '\\#')
-    .replace(/&/g, '\\&')
-    .replace(/%/g, '\\%')
-    .replace(/\^/g, '\\textasciicircum{}')
-    .replace(/~/g, '\\textasciitilde{}')
-    .replaceAll(CODE_BACKSLASH_MARKER, '\\textbackslash{}');
-}
-
-function injectLatexBreakMarker(text) {
-  return text.replaceAll(CODE_BREAK_MARKER, '\\hspace{0pt}');
-}
-
-function wrapSegmentWithColor(segment, color) {
-  if (!color || segment.length === 0) return segment;
-  return `\\textcolor{${color}}{${segment}}`;
-}
-
-function wrapWithColorPreservingNewlines(segment, color) {
-  if (segment.length === 0) return '';
-
-  const lines = segment.split('\n');
-  let output = '';
-
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].length > 0)
-      output += wrapSegmentWithColor(lines[i], color);
-
-    if (i < lines.length - 1)
-      output += '\n';
-  }
-
-  return output;
-}
-
-function renderHighlightedCode(flatTokens, withGlobalBreakHints) {
-  if (!withGlobalBreakHints) {
-    return flatTokens.map(token => {
-      const escaped = escapeLatexCodeText(token.text);
-      const color = getPrismTokenColor(token.types);
-      return wrapWithColorPreservingNewlines(escaped, color);
-    }).join('');
-  }
-
-  const chars = [];
-
-  for (const token of flatTokens) {
-    const color = getPrismTokenColor(token.types);
-    for (const char of token.text)
-      chars.push({ char, color });
-  }
-
-  const breakAfterChar = new Array(chars.length).fill(false);
-  let nonWhitespaceRunLength = 0;
-
-  for (let i = 0; i < chars.length; i++) {
-    const char = chars[i].char;
-    const next = i < chars.length - 1 ? chars[i + 1].char : '';
-    const isWhitespace = /\s/u.test(char);
-
-    if (isWhitespace) {
-      if (char === ' ' && next !== '' && !/\s/u.test(next))
-        breakAfterChar[i] = true;
-      nonWhitespaceRunLength = 0;
-      continue;
-    }
-
-    nonWhitespaceRunLength += 1;
-    const nextIsBreakable = next !== '' && !/\s/u.test(next);
-    const breakAfterPunctuation = CODE_BREAK_CHARS.has(char) && nextIsBreakable;
-    const breakLongUnbrokenRun = nonWhitespaceRunLength >= FORCED_CODE_BREAK_RUN_LENGTH && nextIsBreakable;
-
-    if (breakAfterPunctuation || breakLongUnbrokenRun) {
-      breakAfterChar[i] = true;
-      nonWhitespaceRunLength = 0;
-    }
-  }
-
-  let output = '';
-  let buffer = '';
-  let activeColor = null;
-
-  const flush = () => {
-    if (buffer.length === 0) return;
-    output += wrapWithColorPreservingNewlines(escapeLatexCodeText(buffer), activeColor);
-    buffer = '';
-  };
-
-  for (let i = 0; i < chars.length; i++) {
-    const { char, color } = chars[i];
-    if (color !== activeColor) {
-      flush();
-      activeColor = color;
-    }
-
-    buffer += char;
-
-    if (breakAfterChar[i]) {
-      flush();
-      output += '\\hspace{0pt}';
-    }
-  }
-
-  flush();
-  return output;
-}
-
-function highlightCodeToLatex(code, language, withGlobalBreakHints) {
+function highlightCodeToLatex(code, language) {
   const normalizedCode = code.replaceAll('\r\n', '\n');
   const prismLanguage = mapMarkdownLanguageToPrism(language);
   const grammar = prismLanguage ? Prism.languages[prismLanguage] : undefined;
+  const plain = injectLatexBreakMarker(escapeLatexCodeText(addCodeBreakHints(normalizedCode)));
 
-  if (!grammar) {
-    if (!withGlobalBreakHints) return escapeLatexCodeText(normalizedCode);
-    return injectLatexBreakMarker(escapeLatexCodeText(addCodeBreakHints(normalizedCode)));
-  }
+  if (!grammar) return plain;
 
   const tokens = Prism.tokenize(normalizedCode, grammar);
   const flatTokens = flattenPrismTokens(tokens);
-  return renderHighlightedCode(flatTokens, withGlobalBreakHints);
+
+  return flatTokens.map(token => {
+    const escaped = injectLatexBreakMarker(escapeLatexCodeText(addCodeBreakHints(token.text)));
+    const color = getPrismTokenColor(token.types);
+    return wrapWithColorPreservingNewlines(escaped, color);
+  }).join('');
 }
 
 function convertMarkdownLinks(text) {
@@ -401,127 +358,182 @@ function convertMarkdownUnorderedLists(text) {
   return output.join('\n');
 }
 
+function convertMarkdownOrderedLists(text) {
+  const lines = text.split('\n');
+  const output = [];
+  let inList = false;
+
+  const getListItemContent = line => {
+    const match = line.match(/^\s*\d+\.\s+(.*)$/);
+    return match ? match[1] : '';
+  };
+
+  const isListItemLine = line => /^\s*\d+\.\s+/.test(line);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const listItemContent = getListItemContent(line);
+
+    if (listItemContent !== '') {
+      if (!inList) {
+        output.push('\\begin{enumerate}');
+        inList = true;
+      }
+      output.push(`\\item ${listItemContent}`);
+      continue;
+    }
+
+    if (!inList) {
+      output.push(line);
+      continue;
+    }
+
+    if (line.trim() === '') {
+      let nextNonEmpty = i + 1;
+      while (nextNonEmpty < lines.length && lines[nextNonEmpty].trim() === '')
+        nextNonEmpty += 1;
+
+      if (nextNonEmpty < lines.length && isListItemLine(lines[nextNonEmpty]))
+        continue;
+
+      output.push('\\end{enumerate}');
+      inList = false;
+      output.push(line);
+      continue;
+    }
+
+    if (/^\s{2,}\S/.test(line) && output.length > 0 && output[output.length - 1].startsWith('\\item ')) {
+      output[output.length - 1] += ` ${line.trim()}`;
+      continue;
+    }
+
+    output.push('\\end{enumerate}');
+    inList = false;
+    output.push(line);
+  }
+
+  if (inList)
+    output.push('\\end{enumerate}');
+
+  return output.join('\n');
+}
+
 function makeInlineListings(content) {
   const escaped = escapeLatexCodeText(addCodeBreakHints(content));
   return `\\mdinlinecode{${injectLatexBreakMarker(escaped)}}`;
 }
 
-function preventQuoteLineBreaks(text) {
-  // Keep quotes/backticks glued to adjacent non-whitespace even with xeCJK loaded.
-  const protectedChars = new Set(["'", '"', '`', '‘', '’', '“', '”', '„', '‟', '‚', '‛']);
-  let output = '';
-
-  const quoteToLatex = char => {
-    const raised = command => `{\\rmfamily\\raisebox{-0.08ex}{${command}}}`;
-
-    switch (char) {
-      case "'": return '{\\rmfamily\\textquotesingle{}}';
-      case '"': return '{\\rmfamily\\textquotedbl{}}';
-      case '`': return '{\\rmfamily\\textasciigrave{}}';
-      case '‘': return '{\\rmfamily\\textquoteleft{}}';
-      case '’': return '{\\rmfamily\\textquoteright{}}';
-      case '“': return '{\\rmfamily\\textquotedblleft{}}';
-      case '”': return '{\\rmfamily\\textquotedblright{}}';
-      case '„': return '{\\rmfamily\\quotedblbase{}}';
-      case '‟': return '{\\rmfamily\\textquotedblright{}}';
-      case '‚': return '{\\rmfamily\\quotesinglbase{}}';
-      case '‛': return '{\\rmfamily\\textquoteleft{}}';
-      default: return char;
-    }
+function enforceNoIndentAfterPattern(text, pattern) {
+  const startsWithBlockCommand = rest => {
+    const trimmed = rest.replace(/^\s+/, '');
+    return /^\\(?:section|subsection|subsubsection|begin|end|pov|sectionpov|scenebreak|clearpage|tableofcontents|item|par)\b/.test(trimmed);
   };
 
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (!protectedChars.has(char)) {
-      output += char;
-      continue;
-    }
+  let result = '';
+  let lastIndex = 0;
+  let match;
+  pattern.lastIndex = 0;
 
-    const prev = i > 0 ? text[i - 1] : '';
-    const next = i < text.length - 1 ? text[i + 1] : '';
-    const touchesNonWhitespace =
-      (prev !== '' && !/\s/u.test(prev)) ||
-      (next !== '' && !/\s/u.test(next));
-    const latinQuote = quoteToLatex(char);
-    output += touchesNonWhitespace ? `\\mbox{${latinQuote}}` : latinQuote;
+  while ((match = pattern.exec(text)) !== null) {
+    const endIndex = pattern.lastIndex;
+    result += text.slice(lastIndex, endIndex);
+
+    const rest = text.slice(endIndex);
+    const nextNonWhitespace = rest.match(/\S/);
+    if (nextNonWhitespace && !startsWithBlockCommand(rest))
+      result += '\n\\noindent\\ignorespaces\n';
+
+    lastIndex = endIndex;
   }
 
-  return output;
+  result += text.slice(lastIndex);
+  return result;
+}
+
+function normalizeSeparatorLines(markdown) {
+  return markdown.replace(SEPARATOR_LINE_REGEX, '***');
+}
+
+function normalizeQuotesForTex(text) {
+  let result = text
+    .replace(/\u2018/g, '\\textquoteleft{}')
+    .replace(/\u2019/g, '\\textquoteright{}')
+    .replace(/\u201A/g, '\\quotesinglbase{}')
+    .replace(/\u201C/g, '\\textquotedblleft{}')
+    .replace(/\u201D/g, '\\textquotedblright{}')
+    .replace(/\u201E/g, '\\quotedblbase{}');
+
+  // Keep contractions together even when CJK settings are active.
+  result = result.replace(/(\p{L})\\textquoteright\{\}(\p{L})/gu, '$1\\mbox{\\textquoteright{}}$2');
+  result = result.replace(/(\p{L})\\textquoteleft\{\}(\p{L})/gu, '$1\\mbox{\\textquoteleft{}}$2');
+
+  return result;
+}
+
+function processTextToken(content, previousToken) {
+  let result = escapeLaTeX(content);
+
+  result = result
+    .replaceAll(/(^#+ .*\n+)<div class="pov">(.*?)<\/div>\n*/gm, '$1\n\\sectionpov{$2}\n')
+    .replaceAll(/<div class="pov">(.*?)<\/div>\n*/g, '\\pov{$1}');
+
+  result = smartquotes(result);
+  result = normalizeQuotesForTex(result);
+  result = result.replaceAll(/\.\.\./g, ELLIPSIS);
+  result = result.replace(/[\u2026\u22EF]/g, '\\ldots{}');
+  result = result.replaceAll(new RegExp(`^${EM_DASH} `, 'gm'), `${EM_DASH}${THREE_PER_EM_SPACE}`);
+  result = result.replaceAll(/(?<= )([A-Za-z\u2014\u2013-]) /g, '$1~');
+  result = result.replaceAll(/%%(.*?[^/])%%/g, SETTINGS.stripComments ? '' : '$1');
+
+  if (SETTINGS.replaceSeparators)
+    result = normalizeSeparatorLines(result);
+
+  if (SETTINGS.addEmptyLines)
+    result = result.replaceAll(/\n/g, '\n\n');
+
+  if (SETTINGS.replaceSeparators)
+    result = result.replaceAll(/^\s*\*\*\*\s*$/gm, '\\scenebreak');
+
+  result = result
+    .replaceAll(/^####+ (.*)/gm, '\\subsubsection{$1}')
+    .replaceAll(/^### (.*)/gm, '\\subsubsection{$1}')
+    .replaceAll(/^## (.*)/gm, '\\subsection{$1}')
+    .replaceAll(/^# (.*)/gm, '\\section{$1}')
+    .replaceAll(/\^/g, '\\textasciicircum{}')
+    .replaceAll(/(?<!\*)\*\*\*([^\n*]+)\*\*\*(?!\*)/g, '\\textbf{\\emph{$1}}')
+    .replaceAll(/(?<!\*)\*\*([^\n*]+)\*\*(?!\*)/g, '\\textbf{$1}')
+    .replaceAll(/\\_\\_([^\n]+?)\\_\\_/g, '\\textbf{$1}')
+    .replaceAll(/(?<!\*)\*([^\n*]+)\*(?!\*)/g, '\\emph{$1}')
+    .replaceAll(EN_DASH, '--')
+    .replaceAll(EM_DASH, '---');
+
+  result = convertMarkdownLinks(result);
+  result = convertMarkdownOrderedLists(result);
+  result = convertMarkdownUnorderedLists(result);
+  result = enforceNoIndentAfterPattern(result, /\\(?:sectionpov|pov)\{[^}\n]*\}\s*/g);
+  result = enforceNoIndentAfterPattern(result, /\\end\{(?:itemize|enumerate)\}\s*/g);
+
+  if (previousToken?.type === 'codeBlock') {
+    result = result.replace(/^\s+/, '');
+    if (result.length > 0 && !result.startsWith('\\'))
+      result = `\\noindent\\ignorespaces\n${result}`;
+  }
+
+  return result;
 }
 
 function processToken(token, previousToken) {
   switch (token.type) {
     case 'text':
-      let result = escapeLaTeX(token.content);
-
-      // cSpell:ignore sectionpov
-      result = result
-        .replaceAll(/(^#+ .*\n+)<div class="pov">(.*?)<\/div>\n*/gm, '$1\n\\sectionpov{$2}')
-        .replaceAll(/<div class="pov">(.*?)<\/div>\n*/g, '\\pov{$1}');
-
-      result = smartquotes(result);
-      result = preventQuoteLineBreaks(result);
-
-      // cSpell:ignore ęóąśłżźćńĘÓĄŚŁŻŹĆŃ lettrine lraise lhang nindent findent realheight novskip loversize
-      if (SETTINGS.useDropCaps) {
-        result = result
-          .replaceAll(
-            /(# .*?\n(\n|<div class="pov">.*?<\/div>)*|---\n+|\*\*\*\n+|___\n+)(\*)?(— |"|„)?([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ])([a-zA-Z0-9ęóąśłżźćńĘÓĄŚŁŻŹĆŃ,.?!;:]*)(.*?)\n/g,
-            (_match, m1, _m2, m3, _m4, m5, m6, m7) => `${m1}\\lettrine[lines=3, lraise=0, lhang=0, nindent=${['L'].includes(m5) ? 1.5 : 0.5}em, findent=${['W', 'T'].includes(m5) ? 0.2 : (['L'].includes(m5) ? -0.9 : 0.1)}em, realheight=true, grid=true, loversize=0, depth=${['J', 'Q'].includes(m5) ? 1 : 0}]{${m5}}{${m6}}${m3 === undefined ? '' : m3}${m7}\n\\zz\n`
-          );
-      }
-
-      result = result
-        .replaceAll(/^— /gm, '— ') // change spaces after em-dashes to constant width
-        .replaceAll(/(?<= )([a-zA-Z—–\-]) /g, "$1~") // deal with orphans
-        .replaceAll(
-          /%%(.*?[^\/])%%/g,
-          SETTINGS.stripComments ? "" : "$1"
-        ); // mark comments
-
-      if (SETTINGS.addEmptyLines)
-        result = result
-          .replaceAll(/(?<!\\zz)$\n/gm, '\n\n');
-
-      if (SETTINGS.replaceSeparators)
-        result = result
-          .replaceAll(/(\*\*\*|---|___)\n*/g, `\\scenebreak\n`);
-
-      // cSpell:ignore subsubsection textasciicircum
-      // change headings to sections
-      result = result
-        .replaceAll(/^# (.*)/gm, '\\section{$1}')
-        .replaceAll(/^## (.*)/gm, '\\subsection{$1}')
-        .replaceAll(/^###+ (.*)/gm, '\\subsubsection{$1}')
-        .replaceAll(/–/g, '\\mbox{--}') // change en dashes to latex
-        .replaceAll(/—/g, '\\mbox{---}') // change em dashes to latex
-        .replaceAll(/\.\.\./g, '…') // change three dots to an ellipsis character
-        .replaceAll(/\^/g, '\\textasciicircum{}');
-
-      result = result
-        .replaceAll(/\*(.*?)\*/g, '\\emph{$1}');
-
-      result = convertMarkdownLinks(result);
-      result = convertMarkdownUnorderedLists(result);
-
-      if (previousToken?.type === 'codeBlock') {
-        result = result.replace(/^\s+/, '');
-        if (result.length > 0 && !result.startsWith('\\'))
-          result = `\\noindent\\ignorespaces\n${result}`;
-      }
-
-      return result;
+      return processTextToken(token.content, previousToken);
     case 'inlineCode':
       return makeInlineListings(token.content);
-    case 'codeBlock':
-      const rawLineCount = token.content.split(/\r?\n/).length;
-      const keepTogether = rawLineCount <= 5;
-      const highlightedCode = highlightCodeToLatex(token.content, token.language, false);
-      const codeBlockBody = `\\begin{mdcodeblock}\n${highlightedCode}\n\\end{mdcodeblock}\n`;
-      const codeBlockWithSpacing = `\\par\\addvspace{0.5\\baselineskip}\n${codeBlockBody}`;
-      if (!keepTogether) return codeBlockWithSpacing;
-      const needSpaceLines = Math.min(Math.max(rawLineCount + 4, 6), 10);
-      return `\\begin{samepage}\n\\Needspace{${needSpaceLines}\\baselineskip}\n${codeBlockWithSpacing}\\end{samepage}\n`;
+    case 'codeBlock': {
+      const highlightedCode = highlightCodeToLatex(token.content, token.language);
+      return `\\par\\addvspace{0.5\\baselineskip}\n\\begin{mdcodeblock}\n${highlightedCode}\n\\end{mdcodeblock}\n`;
+    }
+    default:
+      return '';
   }
 }
 
@@ -531,16 +543,21 @@ function processMarkdownToTex(data) {
   if (SETTINGS.stripCodeBlocks) {
     if (Array.isArray(SETTINGS.stripCodeBlocks)) {
       const regexp = new RegExp(
-        "```(" +
-        SETTINGS.stripCodeBlocks.join("|") +
-        ")\\s*$.*?```", "gms"
+        '```(' +
+        SETTINGS.stripCodeBlocks.join('|') +
+        ')\\s*$.*?```',
+        'gms'
       );
       data.markdownTex = data.markdownTex.replaceAll(regexp, '');
-    } else data.markdownTex = data.markdownTex.replaceAll(/```.*?```/gs, '');
+    } else {
+      data.markdownTex = data.markdownTex.replaceAll(/```.*?```/gs, '');
+    }
   }
 
   const tokens = tokenizeMarkdown(data.markdownTex);
-  data.markdownTex = tokens.map((token, index) => processToken(token, tokens[index - 1])).join('');
+  data.markdownTex = tokens
+    .map((token, index) => processToken(token, tokens[index - 1]))
+    .join('');
 }
 
 module.exports = processMarkdownToTex;
