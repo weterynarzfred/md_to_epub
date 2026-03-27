@@ -113,7 +113,7 @@ function getTexStructure(data) {
 
 \\usepackage{emptypage}
 \\usepackage[protrusion]{microtype} % micro typography - protrusions
-\\usepackage[${languages[data.language]}]{babel} % for hyphenation, I think
+\\usepackage[${languages[data.language] || 'english'}]{babel} % for hyphenation, I think
 \\usepackage[all,defaultlines=2]{nowidow} % deal with widows and orphans
 \\usepackage{needspace}
 \\usepackage{pgfornament}
@@ -191,6 +191,10 @@ ${style === 'print' ? `\\newcommand*{\\OrgSection}{}
 \\setlength{\\parindent}{1.5em} % indentation
 \\setlength{\\lineskiplimit}{-1em} % this somehow helps make section titles height to be an integer multiple of baselineskip
 
+% lists
+\\usepackage{enumitem}
+\\setlist[itemize]{leftmargin=1.5em}
+
 % drop caps
 \\usepackage{lettrine}
 \\usepackage{textcase}
@@ -198,65 +202,41 @@ ${style === 'print' ? `\\newcommand*{\\OrgSection}{}
 
 % code blocks
 \\usepackage{xcolor}
-\\usepackage{listings}
+\\usepackage{fvextra}
 \\definecolor{codebg}{HTML}{F7F7FA}
 \\definecolor{codeframe}{HTML}{D8DCE6}
-\\definecolor{codecomment}{HTML}{6B7280}
-\\definecolor{codekeyword}{HTML}{0B5CAD}
-\\definecolor{codestring}{HTML}{8A3B12}
-\\lstdefinelanguage{CSS}{
-  morekeywords={color,background,background-color,font-size,font-family,font-weight,line-height,display,position,top,right,bottom,left,width,height,max-width,min-width,margin,padding,border,border-radius,box-shadow,opacity,overflow,z-index,grid,flex,align-items,justify-content,transform,transition,animation,@media,@keyframes},
-  sensitive=false,
-  morecomment=[s]{/*}{*/},
-  morestring=[b]',
-  morestring=[b]",
-  alsoletter={-@},
-}
-\\lstdefinelanguage{JavaScript}{
-  morekeywords={break,case,catch,class,const,continue,debugger,default,delete,do,else,export,extends,false,finally,for,from,function,if,import,in,instanceof,let,new,null,return,super,switch,this,throw,true,try,typeof,var,void,while,with,yield,async,await},
-  sensitive=true,
-  morecomment=[l]{//},
-  morecomment=[s]{/*}{*/},
-  morestring=[b]',
-  morestring=[b]"
-}
-\\lstdefinelanguage{bash}{
-  morekeywords={if,then,else,fi,for,do,done,case,esac,function,in,while,until,echo,export,local,readonly,return,shift,test},
-  sensitive=true,
-  morecomment=[l]{\\#},
-  morestring=[b]',
-  morestring=[b]"
-}
-\\lstdefinestyle{moderncode}{
-  basicstyle=\\ttfamily\\scriptsize,
-  backgroundcolor=\\color{codebg},
+\\definecolor{codeComment}{HTML}{6B7280}
+\\definecolor{codePunctuation}{HTML}{6B7280}
+\\definecolor{codeProperty}{HTML}{1D4ED8}
+\\definecolor{codeConstant}{HTML}{7C3AED}
+\\definecolor{codeDeleted}{HTML}{B91C1C}
+\\definecolor{codeNumber}{HTML}{B45309}
+\\definecolor{codeSelector}{HTML}{0F766E}
+\\definecolor{codeString}{HTML}{8A3B12}
+\\definecolor{codeInserted}{HTML}{166534}
+\\definecolor{codeOperator}{HTML}{374151}
+\\definecolor{codeKeyword}{HTML}{0B5CAD}
+\\definecolor{codeFunction}{HTML}{7C2D12}
+\\definecolor{codeRegex}{HTML}{0369A1}
+\\definecolor{codeImportant}{HTML}{B91C1C}
+\\definecolor{codeVariable}{HTML}{1F2937}
+\\newcommand{\\mdcodefont}{\\ttfamily\\fontsize{5}{6}\\selectfont}
+\\DefineVerbatimEnvironment{mdcodeblock}{Verbatim}{
+  commandchars=\\\\\\{\\},
+  breaklines=true,
+  breakanywhere=true,
+  breakautoindent=true,
+  breaksymbolleft={},
+  breaksymbolright={},
+  formatcom=\\mdcodefont\\setlength{\\lineskiplimit}{0pt}\\setlength{\\lineskip}{1pt},
   frame=single,
-  rulecolor=\\color{codeframe},
   framerule=0.4pt,
-  framesep=6pt,
-  xleftmargin=0.4em,
-  xrightmargin=0.4em,
-  breaklines=true,
-  breakatwhitespace=false,
-  columns=fullflexible,
-  keepspaces=true,
-  showstringspaces=false,
-  tabsize=2,
-  upquote=true,
-  commentstyle=\\itshape\\color{codecomment},
-  keywordstyle=\\bfseries\\color{codekeyword},
-  stringstyle=\\color{codestring}
+  rulecolor=\\color{codeframe},
+  framesep=4pt
 }
-\\lstdefinestyle{moderninline}{
-  basicstyle=\\ttfamily\\tiny,
-  breaklines=true,
-  breakatwhitespace=false,
-  columns=fullflexible,
-  keepspaces=true,
-  showstringspaces=false,
-  upquote=true
+\\newcommand{\\mdinlinecode}[1]{%
+  {{\\mdcodefont #1}}%
 }
-\\lstset{style=moderncode}
 
 % line height
 \\linespread{1.15}

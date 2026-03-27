@@ -8,7 +8,9 @@ If you want to make something similar yourself:
 - For hyphenation I'm using [hyphen](https://github.com/ytiurin/hyphen).
 
 ## commands
-By default the script loads files from the `./content` folder. You can change this in `./src/constants.js`. Take note that you need to change both `SOURCE_PATH` and `TEXT_CONTENT` - they parse relative paths differently.
+The `make_books` script reads markdown from `SOURCE_PATH` in `./src/constants.js`.
+You can override it per run with `MD_TO_EPUB_SOURCE_PATH` (for example: `MD_TO_EPUB_SOURCE_PATH="D:/notes/" npm run make_books`).
+The preview app (`npm start`) reads markdown from the repository `./content` folder via webpack `TEXT_CONTEXT`.
 
 - `start` - displays the combined preview at http://localhost:3000/
 - `build` - creates a (very unoptimized) html file.
@@ -19,13 +21,15 @@ Settings are located in `./src/constants.js`.
 - `author` - default author of the book, can be overridden by the `author` param if `SETTINGS.parseGtAsProps` is set to `true`.
 - `publisher` - default publisher of the book, can be overridden same as author.
 - `language` - default language code of the book, can be overridden same as author.
+- `convertToPdf` - when `true`, runs xelatex and creates pdf files in addition to epub.
 - `filter` - a function that will decide whether to parse a file or skip it
 - `parseGtAsProps` - enables special parameters parsed from lines starting with `>`, check below.
 - `addEmptyLines` - markdown removes single linebreaks by default, this simply doubles every linebreak to display them as paragraphs.
-- `hyphenate` - adds soft hyphens.
+- `hyphenate` - adds soft hyphens for html/epub output.
 - `replaceSeparators` - replaces markdown separators (`<hr>`) with stylized asterisks.
 - `stripCodeBlocks` - an array of code languages that should be removed, set to `true` to remove all code blocks.
 - `stripComments` - removes markdown comments denoted with double percent signs eg. `%%comment%%`.
+- `useDropCaps` - enables TeX drop caps in pdf output.
 
 ## special parameters
 If you set `SETTINGS.parseGtAsProps` as true all lines starting with `>` will be treated as parameters. If the param starts with `#` it is marked as a tag. Otherwise the script expects key value pairs separated by two colons.

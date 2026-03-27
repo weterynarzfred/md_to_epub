@@ -1,31 +1,27 @@
-// const SOURCE_PATH = "./content/";
-// const SOURCE_PATH = "H:/proton/My files/obsidian/pisanie_2/";
-const SOURCE_PATH = "H:/proton/My files/obsidian/diary/";
+const SOURCE_PATH = process.env.MD_TO_EPUB_SOURCE_PATH || "H:/proton/My files/obsidian/pisanie/";
+
 const SETTINGS = {
   author: 'Weterynarzfred',
   publisher: 'Weterynarzfred Publishing House',
-  language: 'en', // when using with xelatex only polish and english are working for now
-  convertToPdf: true, // uses xelatex
+  language: 'en', // default language for epub metadata and TeX babel config
+  convertToPdf: true, // run xelatex passes after epub generation
   filter: (params, fileName) => {
-    // return params?.tag === 'prose' &&
-    //   params?.skip !== 'true' &&
-    //   params?.order !== '"000"';
-    return fileName === 'diary.md';
-    // return params?.story === 'The Hermit Queen of Kaos and Stars';
-    // return true;
+    return !params.skip &&
+      params.tag?.split(' ').includes('prose');
+    // return fileName === 'diary.md';
   },
-  parseGtAsProps: true,
-  addEmptyLines: true,
-  hyphenate: true, // pdfs made with xelatex are always hyphenated
-  replaceSeparators: true,
+  parseGtAsProps: true, // parse lines starting with ">" into params
+  addEmptyLines: true, // keep single line-break pacing
+  hyphenate: true, // html/epub hyphenation (pdf is handled by TeX)
+  replaceSeparators: true, // map markdown separators to styled scene breaks
   stripCodeBlocks: ['dataview', 'dataviewjs'],
   stripComments: false,
-  useDropCaps: false, // pdf
+  useDropCaps: false, // TeX drop caps
 };
 
 module.exports = { SOURCE_PATH, SETTINGS };
 
-try {
-  // module.exports.TEXT_CONTEXT = require.context("../content/", false, /\.md$/);
-  module.exports.TEXT_CONTEXT = require.context("P:/pisanie/", false, /\.md$/);
-} catch (error) { }
+// Used by the React preview app (webpack only). Node scripts ignore this.
+if (typeof require.context === 'function') {
+  module.exports.TEXT_CONTEXT = require.context("../content/", false, /\.md$/);
+}

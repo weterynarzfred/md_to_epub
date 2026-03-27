@@ -1,6 +1,26 @@
 const smartquotes = require('smartquotes');
 
 const { SETTINGS } = require('../constants');
+const Prism = require('prismjs');
+
+require('prismjs/components/prism-markup');
+require('prismjs/components/prism-css');
+require('prismjs/components/prism-clike');
+require('prismjs/components/prism-javascript');
+require('prismjs/components/prism-jsx');
+require('prismjs/components/prism-typescript');
+require('prismjs/components/prism-tsx');
+require('prismjs/components/prism-scss');
+require('prismjs/components/prism-python');
+require('prismjs/components/prism-c');
+require('prismjs/components/prism-cpp');
+require('prismjs/components/prism-java');
+require('prismjs/components/prism-sql');
+require('prismjs/components/prism-bash');
+require('prismjs/components/prism-powershell');
+require('prismjs/components/prism-php');
+require('prismjs/components/prism-ruby');
+require('prismjs/components/prism-latex');
 
 function escapeLaTeX(str) {
   return str
@@ -52,59 +72,266 @@ function tokenizeMarkdown(md) {
   });
 }
 
-function mapMarkdownLanguageToListings(language) {
+function mapMarkdownLanguageToPrism(language) {
   if (!language) return '';
 
   const aliases = {
-    js: 'JavaScript',
-    javascript: 'JavaScript',
-    mjs: 'JavaScript',
-    cjs: 'JavaScript',
-    jsx: 'JavaScript',
-    ts: 'JavaScript',
-    tsx: 'JavaScript',
-    html: 'HTML',
-    xml: 'XML',
-    css: 'CSS',
-    scss: 'CSS',
-    sass: 'CSS',
-    py: 'Python',
-    python: 'Python',
-    c: 'C',
-    cpp: 'C++',
-    'c++': 'C++',
-    java: 'Java',
-    sql: 'SQL',
+    js: 'javascript',
+    javascript: 'javascript',
+    mjs: 'javascript',
+    cjs: 'javascript',
+    jsx: 'jsx',
+    ts: 'typescript',
+    tsx: 'tsx',
+    html: 'markup',
+    xml: 'markup',
+    svg: 'markup',
+    css: 'css',
+    scss: 'scss',
+    sass: 'scss',
+    py: 'python',
+    python: 'python',
+    c: 'c',
+    cpp: 'cpp',
+    'c++': 'cpp',
+    java: 'java',
+    sql: 'sql',
     sh: 'bash',
     bash: 'bash',
     zsh: 'bash',
-    ps1: 'bash',
-    powershell: 'bash',
-    php: 'PHP',
-    rb: 'Ruby',
-    ruby: 'Ruby',
-    tex: 'TeX',
-    latex: 'TeX',
+    ps1: 'powershell',
+    powershell: 'powershell',
+    php: 'php',
+    rb: 'ruby',
+    ruby: 'ruby',
+    tex: 'latex',
+    latex: 'latex',
   };
 
-  const supported = new Set([
-    'JavaScript',
-    'HTML',
-    'XML',
-    'CSS',
-    'Python',
-    'C',
-    'C++',
-    'Java',
-    'SQL',
-    'bash',
-    'PHP',
-    'Ruby',
-    'TeX',
-  ]);
+  const normalized = language.toLowerCase();
+  return aliases[normalized] ?? '';
+}
 
-  const mapped = aliases[language] ?? '';
-  return supported.has(mapped) ? mapped : '';
+const PRISM_TOKEN_COLORS = {
+  comment: 'codeComment',
+  prolog: 'codeComment',
+  doctype: 'codeComment',
+  cdata: 'codeComment',
+  punctuation: 'codePunctuation',
+  namespace: 'codePunctuation',
+  property: 'codeProperty',
+  tag: 'codeProperty',
+  constant: 'codeConstant',
+  symbol: 'codeConstant',
+  deleted: 'codeDeleted',
+  boolean: 'codeNumber',
+  number: 'codeNumber',
+  selector: 'codeSelector',
+  'attr-name': 'codeSelector',
+  string: 'codeString',
+  char: 'codeString',
+  builtin: 'codeString',
+  inserted: 'codeInserted',
+  operator: 'codeOperator',
+  entity: 'codeOperator',
+  url: 'codeOperator',
+  atrule: 'codeKeyword',
+  'attr-value': 'codeString',
+  keyword: 'codeKeyword',
+  function: 'codeFunction',
+  'class-name': 'codeFunction',
+  regex: 'codeRegex',
+  important: 'codeImportant',
+  variable: 'codeVariable',
+};
+
+const CODE_BREAK_MARKER = '\uE000';
+const CODE_BACKSLASH_MARKER = '\uE001';
+const CODE_BREAK_CHARS = new Set(['/', '\\', '.', '_', '-', ':', '?', '&', '#', '+', ',', ';', '@', '|', '(', ')', '[', ']']);
+const FORCED_CODE_BREAK_RUN_LENGTH = 16;
+
+function addCodeBreakHints(text) {
+  let output = '';
+  let nonWhitespaceRunLength = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = i < text.length - 1 ? text[i + 1] : '';
+    const isWhitespace = /\s/u.test(char);
+
+    output += char;
+
+    if (isWhitespace) {
+      if (char === ' ' && next !== '' && !/\s/u.test(next))
+        output += CODE_BREAK_MARKER;
+      nonWhitespaceRunLength = 0;
+      continue;
+    }
+
+    nonWhitespaceRunLength += 1;
+    const nextIsBreakable = next !== '' && !/\s/u.test(next);
+    const breakAfterPunctuation = CODE_BREAK_CHARS.has(char) && nextIsBreakable;
+    const breakLongUnbrokenRun = nonWhitespaceRunLength >= FORCED_CODE_BREAK_RUN_LENGTH && nextIsBreakable;
+
+    if (breakAfterPunctuation || breakLongUnbrokenRun) {
+      output += CODE_BREAK_MARKER;
+      nonWhitespaceRunLength = 0;
+    }
+  }
+
+  return output;
+}
+
+function flattenPrismTokens(tokens, activeTypes = [], result = []) {
+  const list = Array.isArray(tokens) ? tokens : [tokens];
+  for (const token of list) {
+    if (typeof token === 'string') {
+      result.push({ text: token, types: activeTypes });
+      continue;
+    }
+
+    const aliases = Array.isArray(token.alias) ? token.alias : token.alias ? [token.alias] : [];
+    const nextTypes = [...activeTypes, token.type, ...aliases];
+    flattenPrismTokens(token.content, nextTypes, result);
+  }
+  return result;
+}
+
+function getPrismTokenColor(tokenTypes) {
+  for (let i = tokenTypes.length - 1; i >= 0; i--) {
+    const tokenType = tokenTypes[i];
+    if (PRISM_TOKEN_COLORS[tokenType]) return PRISM_TOKEN_COLORS[tokenType];
+  }
+  return '';
+}
+
+function escapeLatexCodeText(text) {
+  return text
+    .replace(/\t/g, '  ')
+    .replace(/\\/g, CODE_BACKSLASH_MARKER)
+    .replace(/{/g, '\\{')
+    .replace(/}/g, '\\}')
+    .replace(/\$/g, '\\$')
+    .replace(/_/g, '\\_')
+    .replace(/#/g, '\\#')
+    .replace(/&/g, '\\&')
+    .replace(/%/g, '\\%')
+    .replace(/\^/g, '\\textasciicircum{}')
+    .replace(/~/g, '\\textasciitilde{}')
+    .replaceAll(CODE_BACKSLASH_MARKER, '\\textbackslash{}');
+}
+
+function injectLatexBreakMarker(text) {
+  return text.replaceAll(CODE_BREAK_MARKER, '\\hspace{0pt}');
+}
+
+function wrapSegmentWithColor(segment, color) {
+  if (!color || segment.length === 0) return segment;
+  return `\\textcolor{${color}}{${segment}}`;
+}
+
+function wrapWithColorPreservingNewlines(segment, color) {
+  if (segment.length === 0) return '';
+
+  const lines = segment.split('\n');
+  let output = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].length > 0)
+      output += wrapSegmentWithColor(lines[i], color);
+
+    if (i < lines.length - 1)
+      output += '\n';
+  }
+
+  return output;
+}
+
+function renderHighlightedCode(flatTokens, withGlobalBreakHints) {
+  if (!withGlobalBreakHints) {
+    return flatTokens.map(token => {
+      const escaped = escapeLatexCodeText(token.text);
+      const color = getPrismTokenColor(token.types);
+      return wrapWithColorPreservingNewlines(escaped, color);
+    }).join('');
+  }
+
+  const chars = [];
+
+  for (const token of flatTokens) {
+    const color = getPrismTokenColor(token.types);
+    for (const char of token.text)
+      chars.push({ char, color });
+  }
+
+  const breakAfterChar = new Array(chars.length).fill(false);
+  let nonWhitespaceRunLength = 0;
+
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i].char;
+    const next = i < chars.length - 1 ? chars[i + 1].char : '';
+    const isWhitespace = /\s/u.test(char);
+
+    if (isWhitespace) {
+      if (char === ' ' && next !== '' && !/\s/u.test(next))
+        breakAfterChar[i] = true;
+      nonWhitespaceRunLength = 0;
+      continue;
+    }
+
+    nonWhitespaceRunLength += 1;
+    const nextIsBreakable = next !== '' && !/\s/u.test(next);
+    const breakAfterPunctuation = CODE_BREAK_CHARS.has(char) && nextIsBreakable;
+    const breakLongUnbrokenRun = nonWhitespaceRunLength >= FORCED_CODE_BREAK_RUN_LENGTH && nextIsBreakable;
+
+    if (breakAfterPunctuation || breakLongUnbrokenRun) {
+      breakAfterChar[i] = true;
+      nonWhitespaceRunLength = 0;
+    }
+  }
+
+  let output = '';
+  let buffer = '';
+  let activeColor = null;
+
+  const flush = () => {
+    if (buffer.length === 0) return;
+    output += wrapWithColorPreservingNewlines(escapeLatexCodeText(buffer), activeColor);
+    buffer = '';
+  };
+
+  for (let i = 0; i < chars.length; i++) {
+    const { char, color } = chars[i];
+    if (color !== activeColor) {
+      flush();
+      activeColor = color;
+    }
+
+    buffer += char;
+
+    if (breakAfterChar[i]) {
+      flush();
+      output += '\\hspace{0pt}';
+    }
+  }
+
+  flush();
+  return output;
+}
+
+function highlightCodeToLatex(code, language, withGlobalBreakHints) {
+  const normalizedCode = code.replaceAll('\r\n', '\n');
+  const prismLanguage = mapMarkdownLanguageToPrism(language);
+  const grammar = prismLanguage ? Prism.languages[prismLanguage] : undefined;
+
+  if (!grammar) {
+    if (!withGlobalBreakHints) return escapeLatexCodeText(normalizedCode);
+    return injectLatexBreakMarker(escapeLatexCodeText(addCodeBreakHints(normalizedCode)));
+  }
+
+  const tokens = Prism.tokenize(normalizedCode, grammar);
+  const flatTokens = flattenPrismTokens(tokens);
+  return renderHighlightedCode(flatTokens, withGlobalBreakHints);
 }
 
 function convertMarkdownLinks(text) {
@@ -114,19 +341,120 @@ function convertMarkdownLinks(text) {
   );
 }
 
-function makeInlineListings(content) {
-  const delimiters = ['|', '!', ';', '+', '/', '~', '@', '#', '%', '^', '&', ':'];
-  const delimiter = delimiters.find(candidate => !content.includes(candidate));
+function convertMarkdownUnorderedLists(text) {
+  const lines = text.split('\n');
+  const output = [];
+  let inList = false;
 
-  if (delimiter) return `\\lstinline[style=moderninline]${delimiter}${content}${delimiter}`;
-  return `\\texttt{${escapeLaTeX(content)}}`;
+  const getListItemContent = line => {
+    const match = line.match(/^\s*[-+*]\s+(.*)$/);
+    return match ? match[1] : '';
+  };
+
+  const isListItemLine = line => /^\s*[-+*]\s+/.test(line);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const listItemContent = getListItemContent(line);
+
+    if (listItemContent !== '') {
+      if (!inList) {
+        output.push('\\begin{itemize}');
+        inList = true;
+      }
+      output.push(`\\item ${listItemContent}`);
+      continue;
+    }
+
+    if (!inList) {
+      output.push(line);
+      continue;
+    }
+
+    if (line.trim() === '') {
+      let nextNonEmpty = i + 1;
+      while (nextNonEmpty < lines.length && lines[nextNonEmpty].trim() === '')
+        nextNonEmpty += 1;
+
+      if (nextNonEmpty < lines.length && isListItemLine(lines[nextNonEmpty]))
+        continue;
+
+      output.push('\\end{itemize}');
+      inList = false;
+      output.push(line);
+      continue;
+    }
+
+    if (/^\s{2,}\S/.test(line) && output.length > 0 && output[output.length - 1].startsWith('\\item ')) {
+      output[output.length - 1] += ` ${line.trim()}`;
+      continue;
+    }
+
+    output.push('\\end{itemize}');
+    inList = false;
+    output.push(line);
+  }
+
+  if (inList)
+    output.push('\\end{itemize}');
+
+  return output.join('\n');
 }
 
-function processToken(token) {
+function makeInlineListings(content) {
+  const escaped = escapeLatexCodeText(addCodeBreakHints(content));
+  return `\\mdinlinecode{${injectLatexBreakMarker(escaped)}}`;
+}
+
+function preventQuoteLineBreaks(text) {
+  // Keep quotes/backticks glued to adjacent non-whitespace even with xeCJK loaded.
+  const protectedChars = new Set(["'", '"', '`', '‘', '’', '“', '”', '„', '‟', '‚', '‛']);
+  let output = '';
+
+  const quoteToLatex = char => {
+    const raised = command => `{\\rmfamily\\raisebox{-0.08ex}{${command}}}`;
+
+    switch (char) {
+      case "'": return '{\\rmfamily\\textquotesingle{}}';
+      case '"': return '{\\rmfamily\\textquotedbl{}}';
+      case '`': return '{\\rmfamily\\textasciigrave{}}';
+      case '‘': return '{\\rmfamily\\textquoteleft{}}';
+      case '’': return '{\\rmfamily\\textquoteright{}}';
+      case '“': return '{\\rmfamily\\textquotedblleft{}}';
+      case '”': return '{\\rmfamily\\textquotedblright{}}';
+      case '„': return '{\\rmfamily\\quotedblbase{}}';
+      case '‟': return '{\\rmfamily\\textquotedblright{}}';
+      case '‚': return '{\\rmfamily\\quotesinglbase{}}';
+      case '‛': return '{\\rmfamily\\textquoteleft{}}';
+      default: return char;
+    }
+  };
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (!protectedChars.has(char)) {
+      output += char;
+      continue;
+    }
+
+    const prev = i > 0 ? text[i - 1] : '';
+    const next = i < text.length - 1 ? text[i + 1] : '';
+    const touchesNonWhitespace =
+      (prev !== '' && !/\s/u.test(prev)) ||
+      (next !== '' && !/\s/u.test(next));
+    const latinQuote = quoteToLatex(char);
+    output += touchesNonWhitespace ? `\\mbox{${latinQuote}}` : latinQuote;
+  }
+
+  return output;
+}
+
+function processToken(token, previousToken) {
   switch (token.type) {
     case 'text':
       let result = escapeLaTeX(token.content);
       result = smartquotes(result);
+      result = preventQuoteLineBreaks(result);
 
       // cSpell:ignore ęóąśłżźćńĘÓĄŚŁŻŹĆŃ lettrine lraise lhang nindent findent realheight novskip loversize
       if (SETTINGS.useDropCaps) {
@@ -172,15 +500,26 @@ function processToken(token) {
         .replaceAll(/\*(.*?)\*/g, '\\emph{$1}');
 
       result = convertMarkdownLinks(result);
+      result = convertMarkdownUnorderedLists(result);
+
+      if (previousToken?.type === 'codeBlock') {
+        result = result.replace(/^\s+/, '');
+        if (result.length > 0 && !result.startsWith('\\'))
+          result = `\\noindent\\ignorespaces\n${result}`;
+      }
 
       return result;
     case 'inlineCode':
       return makeInlineListings(token.content);
     case 'codeBlock':
-      const language = mapMarkdownLanguageToListings(token.language);
-      const languageOption = language ? `[language=${language}]` : '';
-      const safeContent = token.content.replaceAll('\\end{lstlisting}', '\\end{lstlisting}\\relax{}');
-      return `\\begin{lstlisting}${languageOption}\n${safeContent}\n\\end{lstlisting}`;
+      const rawLineCount = token.content.split(/\r?\n/).length;
+      const keepTogether = rawLineCount <= 5;
+      const highlightedCode = highlightCodeToLatex(token.content, token.language, false);
+      const codeBlockBody = `\\begin{mdcodeblock}\n${highlightedCode}\n\\end{mdcodeblock}\n`;
+      const codeBlockWithSpacing = `\\par\\addvspace{0.5\\baselineskip}\n${codeBlockBody}`;
+      if (!keepTogether) return codeBlockWithSpacing;
+      const needSpaceLines = Math.min(Math.max(rawLineCount + 4, 6), 10);
+      return `\\begin{samepage}\n\\Needspace{${needSpaceLines}\\baselineskip}\n${codeBlockWithSpacing}\\end{samepage}\n`;
   }
 }
 
@@ -199,7 +538,7 @@ function processMarkdownToTex(data) {
   }
 
   const tokens = tokenizeMarkdown(data.markdownTex);
-  data.markdownTex = tokens.map(processToken).join('');
+  data.markdownTex = tokens.map((token, index) => processToken(token, tokens[index - 1])).join('');
 }
 
 module.exports = processMarkdownToTex;

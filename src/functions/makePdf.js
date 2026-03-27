@@ -6,7 +6,7 @@ const sanitizeFilename = require('./sanitizeFilename');
 
 function runXeLatex(texPath) {
   return new Promise((resolve, reject) => {
-    exec(`xelatex --output-directory=output "${texPath}"`, (error, _stdout, stderr) => {
+    exec(`xelatex -interaction=nonstopmode -halt-on-error -output-directory=output "${texPath}"`, (error, _stdout, stderr) => {
       if (error) {
         const err = new Error(`xelatex failed for ${texPath}`);
         err.cause = error;

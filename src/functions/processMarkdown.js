@@ -128,7 +128,7 @@ function preprocessMarkdown(data) {
 function processMarkdown(inputMarkdown, fileName) {
   const data = SETTINGS.parseGtAsProps ?
     separateParams(inputMarkdown) :
-    { markdown: inputMarkdown, props: {} };
+    { markdown: inputMarkdown, params: {} };
   if (SETTINGS.filter !== undefined && !SETTINGS.filter(data.params, fileName)) return false;
   preprocessMarkdown(data);
   data.title = fileName.replace(/\.md$/, '');
