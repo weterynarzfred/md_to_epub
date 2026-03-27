@@ -453,6 +453,12 @@ function processToken(token, previousToken) {
   switch (token.type) {
     case 'text':
       let result = escapeLaTeX(token.content);
+
+      // cSpell:ignore sectionpov
+      result = result
+        .replaceAll(/(^#+ .*\n+)<div class="pov">(.*?)<\/div>\n*/gm, '$1\n\\sectionpov{$2}')
+        .replaceAll(/<div class="pov">(.*?)<\/div>\n*/g, '\\pov{$1}');
+
       result = smartquotes(result);
       result = preventQuoteLineBreaks(result);
 
@@ -481,12 +487,7 @@ function processToken(token, previousToken) {
         result = result
           .replaceAll(/(\*\*\*|---|___)\n*/g, `\\scenebreak\n`);
 
-      // cSpell:ignore sectionpov
-      result = result
-        .replaceAll(/(^#+ .*\n+)<div class="pov">(.*?)<\/div>\n*/gm, '$1\n\\sectionpov{$2}\n')
-        .replaceAll(/<div class="pov">(.*?)<\/div>\n*/g, '\\pov{$1}\n');
-
-      // cSpell:ignore subsubsection  
+      // cSpell:ignore subsubsection textasciicircum
       // change headings to sections
       result = result
         .replaceAll(/^# (.*)/gm, '\\section{$1}')
@@ -494,7 +495,8 @@ function processToken(token, previousToken) {
         .replaceAll(/^###+ (.*)/gm, '\\subsubsection{$1}')
         .replaceAll(/–/g, '\\mbox{--}') // change en dashes to latex
         .replaceAll(/—/g, '\\mbox{---}') // change em dashes to latex
-        .replaceAll(/\.\.\./g, '…'); // change three dots to an ellipsis character
+        .replaceAll(/\.\.\./g, '…') // change three dots to an ellipsis character
+        .replaceAll(/\^/g, '\\textasciicircum{}');
 
       result = result
         .replaceAll(/\*(.*?)\*/g, '\\emph{$1}');
