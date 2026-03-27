@@ -1,5 +1,3 @@
-const smartquotes = require('smartquotes');
-
 const { SETTINGS } = require('../constants');
 
 const MarkdownIt = require('markdown-it');
@@ -13,6 +11,8 @@ const EM_DASH = '\u2014';
 const EN_DASH = '\u2013';
 const THREE_PER_EM_SPACE = '\u2004';
 const SEPARATOR_LINE_REGEX = /^\s*(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})\s*$/;
+const CODE_MARKER_START = '\uE100';
+const CODE_MARKER_END = '\uE101';
 
 function parseGtParams(markdown, params) {
   const lines = markdown.split(/\r?\n/);
@@ -76,6 +76,35 @@ function normalizeSeparatorLines(markdown) {
     .join('\n');
 }
 
+function withCodePlaceholders(markdown) {
+  const codeSegments = [];
+  const makePlaceholder = () => `${CODE_MARKER_START}${codeSegments.length}${CODE_MARKER_END}`;
+  let result = markdown;
+
+  const codeBlockRegex = /(^|\r?\n)```([^\n\r`]*)[ \t]*\r?\n([\s\S]*?)\r?\n```(?=\r?\n|$)/g;
+  result = result.replace(codeBlockRegex, (match, prefix = '') => {
+    const placeholder = makePlaceholder();
+    codeSegments.push(match.slice(prefix.length));
+    return `${prefix}${placeholder}`;
+  });
+
+  const inlineCodeRegex = /(^|[^\\])`([^`\n]+)`/g;
+  result = result.replace(inlineCodeRegex, (_match, leading, code) => {
+    const placeholder = makePlaceholder();
+    codeSegments.push('`' + code + '`');
+    return `${leading}${placeholder}`;
+  });
+
+  return { text: result, codeSegments };
+}
+
+function restoreCodePlaceholders(markdown, codeSegments) {
+  return markdown.replace(
+    new RegExp(`${CODE_MARKER_START}(\\d+)${CODE_MARKER_END}`, 'g'),
+    (_match, index) => codeSegments[Number(index)] ?? ''
+  );
+}
+
 function preprocessMarkdown(data) {
   data.raw = data.markdown;
 
@@ -104,7 +133,6 @@ function preprocessMarkdown(data) {
   data.markdown = data.markdown
     .replaceAll(/\.\.\./g, ELLIPSIS)
     .replace(/\u22EF/g, ELLIPSIS);
-  data.markdown = smartquotes(data.markdown);
 
   let htmlMarkdown = data.markdown;
 
@@ -133,7 +161,9 @@ function preprocessMarkdown(data) {
       : languages[data.params.language];
     try {
       const hyphen = require(`hyphen/${lang}`);
-      htmlMarkdown = hyphen.hyphenateHTMLSync(htmlMarkdown);
+      const protectedMarkdown = withCodePlaceholders(htmlMarkdown);
+      htmlMarkdown = hyphen.hyphenateHTMLSync(protectedMarkdown.text);
+      htmlMarkdown = restoreCodePlaceholders(htmlMarkdown, protectedMarkdown.codeSegments);
     } catch (_error) {
       console.error(`error with hyphenation, language: ${lang}`);
     }
