@@ -2,42 +2,23 @@
   "name": "display_md",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/make_books.js",
   "homepage": ".",
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
     "make_books": "node ./src/make_books.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
   "dependencies": {
     "hyphen": "^1.6.4",
     "markdown-it": "^13.0.1",
     "prismjs": "^1.30.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "smartquotes": "^2.3.2"
   },
   "devDependencies": {
     "cli-progress": "^3.11.2",
-    "jszip": "^3.10.1",
-    "raw-loader": "^4.0.2",
-    "react-app-rewired": "^2.2.1",
-    "react-scripts": "^5.0.1",
-    "sass": "^1.54.4"
+    "jszip": "^3.10.1"
   }
 }
+

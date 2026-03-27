@@ -21,8 +21,3 @@ const SETTINGS = {
 };
 
 module.exports = { SOURCE_PATH, SETTINGS };
-
-// Used by the React preview app (webpack only). Node scripts ignore this.
-if (typeof require.context === 'function') {
-  module.exports.TEXT_CONTEXT = require.context("../content/", false, /\.md$/);
-}

@@ -7,14 +7,11 @@ If you want to make something similar yourself:
 - For making epub files I'm using [jszip](https://github.com/Stuk/jszip) (an epub is just a zip with specific contents).
 - For hyphenation I'm using [hyphen](https://github.com/ytiurin/hyphen).
 
-## commands
+## command
 The `make_books` script reads markdown from `SOURCE_PATH` in `./src/constants.js`.
 You can override it per run with `MD_TO_EPUB_SOURCE_PATH` (for example: `MD_TO_EPUB_SOURCE_PATH="D:/notes/" npm run make_books`).
-The preview app (`npm start`) reads markdown from the repository `./content` folder via webpack `TEXT_CONTEXT`.
 
-- `start` - displays the combined preview at http://localhost:3000/
-- `build` - creates a (very unoptimized) html file.
-- `make_books` - creates epub files in the `output` folder.
+- `make_books` - creates epub and (optionally) pdf files in the `output` folder.
 
 ## settings
 Settings are located in `./src/constants.js`.
@@ -22,7 +19,7 @@ Settings are located in `./src/constants.js`.
 - `publisher` - default publisher of the book, can be overridden same as author.
 - `language` - default language code of the book, can be overridden same as author.
 - `convertToPdf` - when `true`, runs xelatex and creates pdf files in addition to epub.
-- `filter` - a function that will decide whether to parse a file or skip it
+- `filter` - a function that will decide whether to parse a file or skip it.
 - `parseGtAsProps` - enables special parameters parsed from lines starting with `>`, check below.
 - `addEmptyLines` - markdown removes single linebreaks by default, this simply doubles every linebreak to display them as paragraphs.
 - `hyphenate` - adds soft hyphens for html/epub output.
