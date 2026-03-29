@@ -29,6 +29,7 @@ const THREE_PER_EM_SPACE = '\u2004';
 const CODE_BREAK_MARKER = '\uE000';
 const CODE_BACKSLASH_MARKER = '\uE001';
 const TEXT_BACKSLASH_MARKER = '\uE002';
+const INLINE_CODE_PLACEHOLDER_PREFIX = 'MDINLINECODEPLACEHOLDER';
 
 const CODE_BREAK_CHARS = new Set([
   '/',
@@ -132,17 +133,7 @@ function tokenizeMarkdown(md) {
   if (lastIndex < md.length)
     tokens.push({ type: 'text', content: md.slice(lastIndex) });
 
-  return tokens.flatMap(token => {
-    if (token.type !== 'text') return [token];
-
-    const inlineSplit = token.content.split(/(`[^`]+`)/g);
-    return inlineSplit.map(part => {
-      if (part.startsWith('`') && part.endsWith('`'))
-        return { type: 'inlineCode', content: part.slice(1, -1) };
-
-      return { type: 'text', content: part };
-    });
-  });
+  return tokens;
 }
 
 function mapMarkdownLanguageToPrism(language) {
@@ -423,6 +414,29 @@ function makeInlineListings(content) {
   return `\\mdinlinecode{${injectLatexBreakMarker(escaped)}}`;
 }
 
+function extractInlineCodePlaceholders(text) {
+  const replacements = [];
+  const withPlaceholders = text.replace(/`([^`\n]+?)`/g, (_match, code) => {
+    const placeholder = `${INLINE_CODE_PLACEHOLDER_PREFIX}${replacements.length}X`;
+    replacements.push({
+      placeholder,
+      latex: makeInlineListings(code),
+    });
+    return placeholder;
+  });
+
+  return { withPlaceholders, replacements };
+}
+
+function restoreInlineCodePlaceholders(text, replacements) {
+  let restored = text;
+
+  for (const { placeholder, latex } of replacements)
+    restored = restored.split(placeholder).join(latex);
+
+  return restored;
+}
+
 function enforceNoIndentAfterPattern(text, pattern) {
   const startsWithBlockCommand = rest => {
     const trimmed = rest.replace(/^\s+/, '');
@@ -471,7 +485,8 @@ function normalizeQuotesForTex(text) {
 }
 
 function processTextToken(content, previousToken) {
-  let result = escapeLaTeX(content);
+  const { withPlaceholders, replacements } = extractInlineCodePlaceholders(content);
+  let result = escapeLaTeX(withPlaceholders);
 
   result = result
     .replaceAll(/(^#+ .*\n+)<div class="pov">(.*?)<\/div>\n*/gm, '$1\n\\sectionpov{$2}\n')
@@ -512,6 +527,7 @@ function processTextToken(content, previousToken) {
   result = convertMarkdownUnorderedLists(result);
   result = enforceNoIndentAfterPattern(result, /\\(?:sectionpov|pov)\{[^}\n]*\}\s*/g);
   result = enforceNoIndentAfterPattern(result, /\\end\{(?:itemize|enumerate)\}\s*/g);
+  result = restoreInlineCodePlaceholders(result, replacements);
 
   if (previousToken?.type === 'codeBlock') {
     result = result.replace(/^\s+/, '');
@@ -526,8 +542,6 @@ function processToken(token, previousToken) {
   switch (token.type) {
     case 'text':
       return processTextToken(token.content, previousToken);
-    case 'inlineCode':
-      return makeInlineListings(token.content);
     case 'codeBlock': {
       const highlightedCode = highlightCodeToLatex(token.content, token.language);
       return `\\par\\addvspace{0.5\\baselineskip}\n\\begin{mdcodeblock}\n${highlightedCode}\n\\end{mdcodeblock}\n`;
