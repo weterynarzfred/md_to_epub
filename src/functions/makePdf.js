@@ -33,8 +33,6 @@ function makePdf(data) {
 
     try {
       const dir = path.dirname(texPath);
-      console.log(dir);
-
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(texPath, getTexStructure(data));
       await runXeLatex(texPath);
