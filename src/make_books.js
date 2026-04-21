@@ -1,5 +1,6 @@
 const fs = require('fs');
 const cliProgress = require('cli-progress');
+const path = require("path");
 
 const { SOURCE_PATH, SETTINGS } = require('./constants');
 const generateBookData = require('./functions/generateBookData');
@@ -8,13 +9,22 @@ const makePdf = require('./functions/makePdf');
 const sanitizeFilename = require("./functions/sanitizeFilename");
 
 function readInputFiles() {
-  const isMarkdownFileRegex = new RegExp('\.md$');
-  return fs.readdirSync(SOURCE_PATH)
-    .filter(fileName => isMarkdownFileRegex.test(fileName))
-    .map(fileName => ({
-      fileName,
-      markdown: fs.readFileSync(SOURCE_PATH + fileName, 'utf8'),
-    }));
+  const isMarkdownFileRegex = /\.md$/;
+
+  const readDir = dirPath => fs.readdirSync(dirPath, { withFileTypes: true })
+    .flatMap(entry => {
+      const fullPath = path.join(dirPath, entry.name);
+      if (entry.isDirectory() && SETTINGS.includeSubfolders) return readDir(fullPath);
+      if (entry.isFile() && isMarkdownFileRegex.test(entry.name)) {
+        return [{
+          fileName: path.relative(SOURCE_PATH, fullPath),
+          markdown: fs.readFileSync(fullPath, 'utf8'),
+        }];
+      }
+      return [];
+    });
+
+  return readDir(SOURCE_PATH);
 }
 
 async function saveOutputFiles(bookData) {
@@ -78,6 +88,6 @@ async function saveOutputFiles(bookData) {
 }
 
 
-const markdownFiles = readInputFiles();
+const markdownFiles = readInputFiles(SETTINGS.recursive);
 const bookData = generateBookData(markdownFiles);
 saveOutputFiles(bookData);

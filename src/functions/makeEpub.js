@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const JSZip = require('jszip');
+const path = require("path");
 
 const { SETTINGS, SOURCE_PATH } = require('../constants');
 
@@ -31,7 +32,11 @@ function makeEpub(data) {
     zipText.file('text.xhtml', getHtmlStructure(data));
     zip
       .generateNodeStream({ type: 'nodebuffer', mimeType: 'application/epub+zip' })
-      .pipe(fs.createWriteStream('./output/' + data.fileName + '.epub'))
+      .pipe((() => {
+        const dir = path.dirname('./output/' + data.fileName);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        return fs.createWriteStream('./output/' + data.fileName + '.epub');
+      })())
       .on('finish', resolve);
   });
 }
